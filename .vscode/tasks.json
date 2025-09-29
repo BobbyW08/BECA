@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "format",    "type": "shell", "command": "npm run format" },
+    { "label": "lint",      "type": "shell", "command": "npm run lint" },
+    { "label": "typecheck", "type": "shell", "command": "npm run typecheck" },
+    { "label": "test",      "type": "shell", "command": "npm run test" }
+  ]
+}
