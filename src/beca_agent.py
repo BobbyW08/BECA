@@ -1,14 +1,30 @@
-print("🚀 BECA agent starting…")
-
-import requests
 import json
-from typing import Any, Dict
-from tools import create_react_scaffold
+import sys
+import requests
+from typing import Any, Dict, List, Tuple
+
+from prompt_manager import PromptManager
+from memory_manager import MemoryManager
+from tool_router import ToolRouter
 
 OLLAMA_URL = "http://127.0.0.1:11434"
 MODEL = "qwen2.5-coder:3b-instruct-q4_K_M"
 
+
+def parse_cli_args(args: List[str]) -> Tuple[str, Dict[str, Any]]:
+    """Extract task name and parameters from CLI arguments."""
+    task = args[0] if args else "scaffold_react"
+    params: Dict[str, Any] = {}
+
+    if task == "scaffold_react":
+        app_name = args[1] if len(args) > 1 else None
+        params["app_name"] = app_name or "my-new-weather-app"
+
+    return task, params
+
 def ask_model(prompt: str) -> Dict[str, Any]:
+    """Sends a prompt to the Ollama model and returns the JSON response."""
+    print("🧠 Calling Ollama model...")
     url = f"{OLLAMA_URL}/api/generate"
     payload = {
         "model": MODEL,
@@ -16,43 +32,100 @@ def ask_model(prompt: str) -> Dict[str, Any]:
         "stream": False,
         "format": "json"
     }
-    r = requests.post(url, json=payload, timeout=120)
-    r.raise_for_status()
-    return r.json()
-
-if __name__ == "__main__":
-    # 1) Ask the model for a JSON plan
-    test_prompt = (
-        "You are a scaffolding assistant. ALWAYS respond with valid JSON only "
-        "and nothing else. Return exactly one JSON object with keys: "
-        "\"title\" (string) and \"steps\" (array of strings). "
-        "Example: {\"title\":\"x\",\"steps\":[\"a\",\"b\"]}. "
-        "Now produce the scaffold plan for a React app named weather-app."
-    )
-    resp = ask_model(test_prompt)
-
-    # 2) Show the full raw response from Ollama
-    print("\n── Full Ollama Response ──")
-    print(json.dumps(resp, indent=2))
-
-    # 3) Extract the JSON string from the "response" field
-    raw_plan = resp.get("response") or resp.get("output") or ""
-    print("\n── Raw JSON String ──")
-    print(raw_plan)
-
-    # 4) Parse that string into a real Python dict
     try:
-        plan = json.loads(raw_plan)
-    except json.JSONDecodeError as e:
-        print("\n❌ Failed to parse JSON:", e)
-        exit(1)
+        r = requests.post(url, json=payload, timeout=120)
+        r.raise_for_status()
+        return r.json()
+    except requests.RequestException as e:
+        print(f"❌ Error calling Ollama: {e}")
+        return {}
 
-    # 5) Show the parsed plan neatly
+def main():
+    """
+    Main orchestration logic for the BECA agent.
+    """
+    print("🚀 BECA agent starting…")
+
+    # 1. Initialize managers
+    try:
+        prompt_manager = PromptManager(prompts_dir="prompts")
+        memory_manager = MemoryManager(memory_file="src/memory.json")
+        tool_router = ToolRouter()
+    except Exception as e:
+        print(f"❌ Error initializing managers: {e}")
+        return
+
+    # 2. Define the task (for now, it's hardcoded)
+    task_name, task_params = parse_cli_args(sys.argv[1:])
+
+    # 3. Load prompt, inject memory, and render
+    try:
+        # Retrieve past successful patterns for context (optional)
+        past_patterns = memory_manager.retrieve_past_patterns(task_name)
+        # Here you could inject 'past_patterns' into the prompt if the template supports it
+        
+        final_prompt = prompt_manager.render(task_name, **task_params)
+        print("\n── Rendered Prompt ──")
+        print(final_prompt)
+    except (ValueError, FileNotFoundError) as e:
+        print(f"❌ Error rendering prompt: {e}")
+        return
+
+    # 4. Call the AI model
+    model_response = ask_model(final_prompt)
+    if not model_response:
+        return
+
+    raw_plan_str = model_response.get("response", "")
+    print("\n── Raw JSON Plan from Model ──")
+    print(raw_plan_str)
+
+    # 5. Parse the JSON plan
+    try:
+        plan = json.loads(raw_plan_str)
+    except json.JSONDecodeError as e:
+        print(f"\n❌ Failed to parse JSON plan: {e}")
+        # Optionally, save this failure to memory
+        memory_manager.save_memory(f"{task_name}_failure_{model_response.get('created_at')}", {
+            "prompt": final_prompt,
+            "response": raw_plan_str,
+            "error": str(e)
+        })
+        return
+
     print("\n── Parsed Plan ──")
     print(json.dumps(plan, indent=2))
 
-    # 6) Dry-run your tool stub using the plan title as folder name
-    folder_name = plan["title"].lower().replace(" ", "-")
-    result = create_react_scaffold(folder_name)
-    print(f"\n── create_react_scaffold('{folder_name}') returned ──")
-    print(result)
+    # 6. Route plan to tools
+    try:
+        callables = tool_router.route(plan)
+        if not callables:
+            print("🤔 No tools were routed for the given plan.")
+            return
+    except ValueError as e:
+        print(f"❌ Error routing tools: {e}")
+        return
+
+    # 7. Execute tools
+    print("\n── Executing Tools ──")
+    for func in callables:
+        try:
+            result = func()
+            print(f"✅ Tool executed successfully: {result}")
+            # On success, save the pattern to memory
+            memory_manager.save_memory(f"{task_name}_success_{model_response.get('created_at')}", {
+                "prompt": final_prompt,
+                "plan": plan,
+                "result": result
+            })
+        except Exception as e:
+            print(f"❌ Tool execution failed: {e}")
+            # Optionally, save the failure
+            memory_manager.save_memory(f"{task_name}_tool_failure_{model_response.get('created_at')}", {
+                "prompt": final_prompt,
+                "plan": plan,
+                "error": str(e)
+            })
+
+if __name__ == "__main__":
+    main()

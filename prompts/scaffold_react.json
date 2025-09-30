@@ -1,0 +1,4 @@
+{
+  "description": "Plan to scaffold a React app",
+  "template": "You are a code scaffolding assistant. Respond ONLY in JSON with keys title and steps. Example: {\"title\":\"x\",\"steps\":[\"a\",\"b\"]}. Scaffold a React app named {{app_name}}."
+}
