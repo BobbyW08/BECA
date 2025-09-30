@@ -1,7 +1,6 @@
 import json
-import sys
 import requests
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 from prompt_manager import PromptManager
 from memory_manager import MemoryManager
@@ -9,18 +8,6 @@ from tool_router import ToolRouter
 
 OLLAMA_URL = "http://127.0.0.1:11434"
 MODEL = "qwen2.5-coder:3b-instruct-q4_K_M"
-
-
-def parse_cli_args(args: List[str]) -> Tuple[str, Dict[str, Any]]:
-    """Extract task name and parameters from CLI arguments."""
-    task = args[0] if args else "scaffold_react"
-    params: Dict[str, Any] = {}
-
-    if task == "scaffold_react":
-        app_name = args[1] if len(args) > 1 else None
-        params["app_name"] = app_name or "my-new-weather-app"
-
-    return task, params
 
 def ask_model(prompt: str) -> Dict[str, Any]:
     """Sends a prompt to the Ollama model and returns the JSON response."""
@@ -56,7 +43,8 @@ def main():
         return
 
     # 2. Define the task (for now, it's hardcoded)
-    task_name, task_params = parse_cli_args(sys.argv[1:])
+    task_name = "scaffold_react"
+    task_params = {"app_name": "my-new-weather-app"}
 
     # 3. Load prompt, inject memory, and render
     try:
