@@ -11,7 +11,7 @@ def web_search(query: str) -> Dict[str, Any]:
     This is a stub and requires a valid SerpAPI key to function.
     """
     if SERPAPI_API_KEY == "YOUR_SERPAPI_API_KEY":
-        print("⚠️ Warning: SerpAPI key not set. Returning stubbed data.")
+        print("WARNING: SerpAPI key not set. Returning stubbed data.")
         return {
             "status": "success",
             "query": query,

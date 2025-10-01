@@ -1,13 +1,4 @@
 {
-    "name": "Web Search",
-    "description": "A prompt to perform a web search and answer a question based on the results.",
-    "template": {
-        "system_message": "You are an AI assistant that can search the web to answer questions.",
-        "task_prompt": "Your task is to answer the following question: '{{query}}'. To do this, you must first perform a web search to gather information, and then formulate an answer based on the search results. Your plan should have two steps: 1. Perform a web search for the query. 2. Summarize the findings to answer the question.",
-        "user_prompt": "Please answer the question: '{{query}}'",
-        "memory_injection": {
-            "successful_operations": "{{successful_operations}}",
-            "failed_operations": "{{failed_operations}}"
-        }
-    }
+  "description": "Plan to perform web search and answer question",
+  "template": "You are a research assistant. Respond ONLY in JSON with keys title and steps. Example: {\"title\":\"x\",\"steps\":[\"a\",\"b\"]}. Search the web for: {{query}}"
 }

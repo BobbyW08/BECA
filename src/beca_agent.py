@@ -1,6 +1,12 @@
 import json
+import sys
 import requests
 from typing import Any, Dict
+
+# Fix Windows console encoding issues
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 from prompt_manager import PromptManager
 from memory_manager import MemoryManager
@@ -11,7 +17,7 @@ MODEL = "qwen2.5-coder:3b-instruct-q4_K_M"
 
 def ask_model(prompt: str) -> Dict[str, Any]:
     """Sends a prompt to the Ollama model and returns the JSON response."""
-    print("🧠 Calling Ollama model...")
+    print("Calling Ollama model...")
     url = f"{OLLAMA_URL}/api/generate"
     payload = {
         "model": MODEL,
@@ -24,14 +30,14 @@ def ask_model(prompt: str) -> Dict[str, Any]:
         r.raise_for_status()
         return r.json()
     except requests.RequestException as e:
-        print(f"❌ Error calling Ollama: {e}")
+        print(f"ERROR: Error calling Ollama: {e}")
         return {}
 
 def main():
     """
     Main orchestration logic for the BECA agent.
     """
-    print("🚀 BECA agent starting…")
+    print("BECA agent starting...")
 
     # 1. Initialize managers
     try:
@@ -39,7 +45,7 @@ def main():
         memory_manager = MemoryManager(memory_file="src/memory.json")
         tool_router = ToolRouter()
     except Exception as e:
-        print(f"❌ Error initializing managers: {e}")
+        print(f"ERROR: Error initializing managers: {e}")
         return
 
     # 2. Define the task (for now, it's hardcoded)
@@ -56,7 +62,7 @@ def main():
         print("\n── Rendered Prompt ──")
         print(final_prompt)
     except (ValueError, FileNotFoundError) as e:
-        print(f"❌ Error rendering prompt: {e}")
+        print(f"ERROR: Error rendering prompt: {e}")
         return
 
     # 4. Call the AI model
@@ -72,7 +78,7 @@ def main():
     try:
         plan = json.loads(raw_plan_str)
     except json.JSONDecodeError as e:
-        print(f"\n❌ Failed to parse JSON plan: {e}")
+        print(f"\nERROR: Failed to parse JSON plan: {e}")
         # Optionally, save this failure to memory
         memory_manager.save_memory(f"{task_name}_failure_{model_response.get('created_at')}", {
             "prompt": final_prompt,
@@ -88,10 +94,10 @@ def main():
     try:
         callables = tool_router.route(plan)
         if not callables:
-            print("🤔 No tools were routed for the given plan.")
+            print("WARNING: No tools were routed for the given plan.")
             return
     except ValueError as e:
-        print(f"❌ Error routing tools: {e}")
+        print(f"ERROR: Error routing tools: {e}")
         return
 
     # 7. Execute tools
@@ -99,7 +105,7 @@ def main():
     for func in callables:
         try:
             result = func()
-            print(f"✅ Tool executed successfully: {result}")
+            print(f"SUCCESS: Tool executed successfully: {result}")
             # On success, save the pattern to memory
             memory_manager.save_memory(f"{task_name}_success_{model_response.get('created_at')}", {
                 "prompt": final_prompt,
@@ -107,7 +113,7 @@ def main():
                 "result": result
             })
         except Exception as e:
-            print(f"❌ Tool execution failed: {e}")
+            print(f"ERROR: Tool execution failed: {e}")
             # Optionally, save the failure
             memory_manager.save_memory(f"{task_name}_tool_failure_{model_response.get('created_at')}", {
                 "prompt": final_prompt,

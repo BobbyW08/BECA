@@ -1,4 +1,4 @@
 {
   "description": "Plan to scaffold a React app",
-  "template": "You are an automation planning assistant for the BECA agent.\n\nFollow these rules strictly:\n- Output ONLY a single JSON object with keys \"title\" and \"steps\".\n- Use double quotes for all strings. Do not include backticks, Markdown, or explanatory text.\n- \"steps\" must be an array of strings, and each string must directly correspond to an available tool invocation.\n- Allowed tool invocations:\n  * scaffold a react app named '{{app_name}}'\n  * npx create-react-app {{app_name}}\n- Do not include conversational language, setup instructions, or human-readable guidance.\n- Generate only the tool steps needed to complete the task.\n\nTask: Provide the plan to scaffold the React app named \"{{app_name}}\"."
+  "template": "You are a code scaffolding assistant. Respond ONLY in JSON with keys title and steps. Example: {\"title\":\"x\",\"steps\":[\"a\",\"b\"]}. Scaffold a React app named {{app_name}}."
 }
