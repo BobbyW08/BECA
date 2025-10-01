@@ -30,7 +30,8 @@ OLLAMA_URL = "http://127.0.0.1:11434"
 llm = ChatOllama(
     model=OLLAMA_MODEL,
     base_url=OLLAMA_URL,
-    temperature=0.1,  # Low temperature for more focused code generation
+    temperature=0.3,  # Slightly higher for better reasoning
+    num_predict=512,  # Limit response length
 )
 
 # Create agent prompt
@@ -38,30 +39,32 @@ llm = ChatOllama(
 agent_prompt = PromptTemplate.from_template(
     """You are BECA (Badass Expert Coding Agent), an autonomous coding assistant. Help users build applications, fix bugs, and write code.
 
-IMPORTANT: For simple conversational questions (like "what's your name?" or "hello"), answer directly without using tools. Only use tools for actual coding tasks.
+IMPORTANT:
+- For simple questions (like "what's your name?"), answer directly without tools
+- Use tools only for actual coding/file tasks
+- Keep responses concise and direct
 
 You have access to the following tools:
 
 {tools}
 
-Use the following format:
+RESPONSE FORMAT (use EXACTLY this format):
 
 Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
+Thought: think about what to do (one sentence)
+Action: tool name from [{tool_names}]
+Action Input: tool input value (NO markdown, NO formatting)
 
-CRITICAL TOOL INPUT RULES:
-- For tools with ONE parameter: provide ONLY the value, NOT JSON
-  Example: create_react_app needs app_name → Action Input: my-todo-app
-- For tools with MULTIPLE parameters: use JSON format
-  Example: write_file needs file_path and content → Action Input: {{"file_path": "app.py", "content": "print('hi')"}}
-- NEVER wrap single parameters in JSON objects
+TOOL INPUT RULES:
+- Single parameter tools: provide ONLY the value
+  Example → Action Input: my-app-name
+- Multi-parameter tools: use JSON
+  Example → Action Input: {{"param1": "value1", "param2": "value2"}}
 
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question. IMPORTANT: Include the full details from your observations, not just a summary.
+Observation: the result
+... (repeat Thought/Action/Input/Observation as needed)
+Thought: I know the final answer
+Final Answer: detailed answer with observations
 
 Question: {input}
 Thought: {agent_scratchpad}
@@ -81,8 +84,10 @@ agent_executor = AgentExecutor(
     tools=BECA_TOOLS,
     verbose=True,  # Show thinking process
     handle_parsing_errors=True,
-    max_iterations=20,  # Increased for complex planning tasks
-    max_execution_time=120,  # 2 minutes timeout
+    max_iterations=10,  # Reduced to prevent loops
+    max_execution_time=60,  # 1 minute timeout
+    return_intermediate_steps=True,  # Return steps for debugging
+    early_stopping_method="generate",  # Generate response on max iterations
 )
 
 

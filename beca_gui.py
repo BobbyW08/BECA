@@ -102,8 +102,12 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
     """)
 
     # Event handlers
-    msg.submit(chat_with_beca, [msg, chatbot], [chatbot])
-    submit.click(chat_with_beca, [msg, chatbot], [chatbot])
+    msg.submit(chat_with_beca, [msg, chatbot], [chatbot]).then(
+        lambda: "", None, msg  # Clear the input box after submitting
+    )
+    submit.click(chat_with_beca, [msg, chatbot], [chatbot]).then(
+        lambda: "", None, msg  # Clear the input box after clicking
+    )
     clear.click(lambda: None, None, chatbot, queue=False)
 
 if __name__ == "__main__":
