@@ -54,7 +54,7 @@ def chat_with_beca(message: str, history: List[List[str]]):
 # Create Gradio interface
 with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
     gr.Markdown("# 🤖 BECA - Badass Expert Coding Agent")
-    gr.Markdown("Your personal AI coding assistant powered by local Qwen2.5-coder model")
+    gr.Markdown("Your personal AI coding assistant powered by Llama 3.1 with persistent memory 🧠")
 
     chatbot = gr.Chatbot(
         label="Chat with BECA",
@@ -80,9 +80,22 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
             "Create a React app for tracking my todo list",
             "Help me scaffold a Flask API",
             "Search the web for React best practices",
+            "Remember that I prefer TypeScript over JavaScript",
+            "What are my saved preferences?",
         ],
         inputs=msg
     )
+
+    gr.Markdown("""
+    ### 🧠 Memory Features
+    BECA now remembers:
+    - **Conversation history** - Recalls past discussions
+    - **Your preferences** - Automatically applies your coding style
+    - **Successful patterns** - Reuses solutions that worked before
+    - **Tool statistics** - Tracks what tools work best
+
+    Try asking: "Remember that I prefer React over Vue" or "What did we talk about yesterday?"
+    """)
 
     # Event handlers
     msg.submit(chat_with_beca, [msg, chatbot], [chatbot])

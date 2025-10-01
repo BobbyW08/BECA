@@ -921,8 +921,7 @@ def _create_react_vite_scaffold(project_name: str) -> str:
         os.makedirs(f"{project_name}/src", exist_ok=True)
 
         # package.json
-        with open(f"{project_name}/package.json", "w") as f:
-            f.write(f'''{{{
+        package_json_content = f'''{{
   "name": "{project_name}",
   "private": true,
   "version": "0.0.0",
@@ -940,8 +939,9 @@ def _create_react_vite_scaffold(project_name: str) -> str:
     "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.0.8"
   }}
-}}
-''')
+}}'''
+        with open(f"{project_name}/package.json", "w") as f:
+            f.write(package_json_content)
 
         # vite.config.js
         with open(f"{project_name}/vite.config.js", "w") as f:
@@ -1175,6 +1175,15 @@ setup(
 
 
 # Export all tools as a list
+# Import memory tools
+try:
+    from memory_tools import MEMORY_TOOLS
+    MEMORY_AVAILABLE = True
+except ImportError:
+    MEMORY_TOOLS = []
+    MEMORY_AVAILABLE = False
+    print("Warning: Memory tools not available")
+
 BECA_TOOLS = [
     create_react_app,
     read_file,
@@ -1197,4 +1206,4 @@ BECA_TOOLS = [
     generate_tests,
     coverage_report,
     create_project_from_template,
-]
+] + MEMORY_TOOLS  # Add memory tools if available
