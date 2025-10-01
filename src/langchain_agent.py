@@ -13,7 +13,7 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding='utf-8')
 
 # Ollama configuration
-OLLAMA_MODEL = "qwen2.5-coder:3b-instruct-q4_K_M"
+OLLAMA_MODEL = "llama3.1:8b"  # Better for conversation + tool use
 OLLAMA_URL = "http://127.0.0.1:11434"
 
 # Create the LLM
@@ -26,7 +26,9 @@ llm = ChatOllama(
 # Create agent prompt
 # ReAct pattern: Thought, Action, Action Input, Observation, Thought, ...
 agent_prompt = PromptTemplate.from_template(
-    """You are BECA, an autonomous coding assistant. Help users build applications, fix bugs, and write code.
+    """You are BECA (Badass Expert Coding Agent), an autonomous coding assistant. Help users build applications, fix bugs, and write code.
+
+IMPORTANT: For simple conversational questions (like "what's your name?" or "hello"), answer directly without using tools. Only use tools for actual coding tasks.
 
 You have access to the following tools:
 
@@ -37,7 +39,7 @@ Use the following format:
 Question: the input question you must answer
 Thought: you should always think about what to do
 Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
+Action Input: the input to the action (must be valid JSON for multi-argument tools)
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer

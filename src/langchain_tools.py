@@ -478,6 +478,702 @@ def find_in_files(search_term: str, directory: str = ".", file_pattern: str = "*
         return f"Error searching files: {str(e)}"
 
 
+@tool
+def analyze_code(file_path: str) -> str:
+    """
+    Performs basic static analysis on a code file.
+    Checks for: file size, line count, function/class count, TODO comments.
+
+    Args:
+        file_path: Path to the file to analyze
+
+    Returns:
+        Analysis report with code metrics
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"Error: File '{file_path}' not found"
+
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+
+        total_lines = len(lines)
+        non_empty_lines = len([l for l in lines if l.strip()])
+        comment_lines = len([l for l in lines if l.strip().startswith(('#', '//', '/*', '*'))])
+
+        # Count functions and classes (simple heuristic)
+        functions = len([l for l in lines if 'def ' in l or 'function ' in l])
+        classes = len([l for l in lines if 'class ' in l])
+
+        # Find TODOs and FIXMEs
+        todos = []
+        for i, line in enumerate(lines, 1):
+            if 'TODO' in line or 'FIXME' in line or 'HACK' in line:
+                todos.append(f"  Line {i}: {line.strip()}")
+
+        # File size
+        file_size = os.path.getsize(file_path)
+        size_kb = file_size / 1024
+
+        report = f"""Code Analysis: {file_path}
+
+📊 Metrics:
+- Total Lines: {total_lines}
+- Non-empty Lines: {non_empty_lines}
+- Comment Lines: {comment_lines}
+- Functions: {functions}
+- Classes: {classes}
+- File Size: {size_kb:.2f} KB
+
+"""
+        if todos:
+            report += f"⚠️  TODOs/FIXMEs Found ({len(todos)}):\n" + "\n".join(todos[:10])
+            if len(todos) > 10:
+                report += f"\n  ... and {len(todos) - 10} more"
+        else:
+            report += "✅ No TODOs or FIXMEs found"
+
+        return report
+
+    except Exception as e:
+        return f"Error analyzing code: {str(e)}"
+
+
+@tool
+def find_bugs(file_path: str) -> str:
+    """
+    Scans code for common bug patterns and code smells.
+    Checks for: syntax errors, common mistakes, security issues.
+
+    Args:
+        file_path: Path to the file to check
+
+    Returns:
+        List of potential issues found
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"Error: File '{file_path}' not found"
+
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+            lines = content.split('\n')
+
+        issues = []
+
+        # Python-specific checks
+        if file_path.endswith('.py'):
+            # Check for syntax errors using compile
+            try:
+                compile(content, file_path, 'exec')
+            except SyntaxError as e:
+                issues.append(f"❌ Syntax Error: Line {e.lineno}: {e.msg}")
+
+            # Common Python issues
+            for i, line in enumerate(lines, 1):
+                if 'import *' in line:
+                    issues.append(f"⚠️  Line {i}: Wildcard import (import *) is discouraged")
+                if 'eval(' in line or 'exec(' in line:
+                    issues.append(f"🔒 Line {i}: Security risk - eval/exec detected")
+                if 'password' in line.lower() and '=' in line and '"' in line:
+                    issues.append(f"🔒 Line {i}: Possible hardcoded password")
+
+        # JavaScript-specific checks
+        if file_path.endswith(('.js', '.jsx', '.ts', '.tsx')):
+            for i, line in enumerate(lines, 1):
+                if 'var ' in line:
+                    issues.append(f"⚠️  Line {i}: Use 'let' or 'const' instead of 'var'")
+                if '==' in line and '===' not in line:
+                    issues.append(f"⚠️  Line {i}: Use '===' instead of '=='")
+                if 'eval(' in line:
+                    issues.append(f"🔒 Line {i}: Security risk - eval() detected")
+
+        # General checks for all files
+        for i, line in enumerate(lines, 1):
+            if 'console.log' in line or 'print(' in line and 'debug' not in line.lower():
+                issues.append(f"🐛 Line {i}: Debug statement left in code")
+
+        if not issues:
+            return f"✅ No obvious bugs or issues found in {file_path}"
+
+        return f"Bug Check: {file_path}\n\nFound {len(issues)} potential issue(s):\n\n" + "\n".join(issues[:20])
+
+    except Exception as e:
+        return f"Error checking for bugs: {str(e)}"
+
+
+@tool
+def suggest_improvements(file_path: str) -> str:
+    """
+    Suggests code improvements and refactoring opportunities.
+    Checks for: long functions, code duplication, complexity.
+
+    Args:
+        file_path: Path to the file to analyze
+
+    Returns:
+        List of suggested improvements
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"Error: File '{file_path}' not found"
+
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+
+        suggestions = []
+
+        # Check for long lines
+        long_lines = [(i+1, len(line)) for i, line in enumerate(lines) if len(line) > 100]
+        if long_lines:
+            suggestions.append(f"📏 Long Lines: {len(long_lines)} lines exceed 100 characters (consider wrapping)")
+
+        # Check for long functions (simple heuristic)
+        in_function = False
+        func_start = 0
+        func_lines = 0
+        for i, line in enumerate(lines, 1):
+            if 'def ' in line or 'function ' in line:
+                if func_lines > 50:
+                    suggestions.append(f"📦 Long Function: Lines {func_start}-{i-1} ({func_lines} lines - consider breaking into smaller functions)")
+                in_function = True
+                func_start = i
+                func_lines = 0
+            elif in_function:
+                if line.strip() and not line.strip().startswith('#'):
+                    func_lines += 1
+
+        # Check for code duplication (very basic)
+        line_counts = {}
+        for line in lines:
+            stripped = line.strip()
+            if stripped and not stripped.startswith(('#', '//')):
+                line_counts[stripped] = line_counts.get(stripped, 0) + 1
+
+        duplicates = {line: count for line, count in line_counts.items() if count > 3 and len(line) > 30}
+        if duplicates:
+            suggestions.append(f"🔄 Possible Duplication: {len(duplicates)} code patterns repeated multiple times")
+
+        # Check for deeply nested code
+        for i, line in enumerate(lines, 1):
+            indent_level = (len(line) - len(line.lstrip())) // 4
+            if indent_level > 4:
+                suggestions.append(f"🌲 Deep Nesting: Line {i} has {indent_level} levels of indentation (consider refactoring)")
+                break
+
+        # General suggestions
+        if len(lines) > 500:
+            suggestions.append(f"📄 Large File: {len(lines)} lines - consider splitting into multiple files")
+
+        if not suggestions:
+            return f"✅ Code looks good! No obvious improvements needed for {file_path}"
+
+        return f"Improvement Suggestions: {file_path}\n\n" + "\n".join(f"{i+1}. {s}" for i, s in enumerate(suggestions[:10]))
+
+    except Exception as e:
+        return f"Error generating suggestions: {str(e)}"
+
+
+@tool
+def run_tests(path: str = ".") -> str:
+    """
+    Runs tests in the specified path.
+    Auto-detects test framework (pytest, unittest, jest, npm test).
+
+    Args:
+        path: Path to test file or directory (default: current directory)
+
+    Returns:
+        Test results or error message
+    """
+    try:
+        # Check if it's a Python project with pytest
+        if os.path.exists('pytest.ini') or any(f.startswith('test_') for f in os.listdir('.') if f.endswith('.py')):
+            result = subprocess.run(
+                ["python", "-m", "pytest", path, "-v"],
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            return f"Pytest Results:\n\n{result.stdout}\n{result.stderr}"
+
+        # Check for Python unittest
+        elif path.endswith('.py') or any(f.startswith('test_') for f in os.listdir('.') if f.endswith('.py')):
+            result = subprocess.run(
+                ["python", "-m", "unittest", "discover", "-s", path],
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            return f"Unittest Results:\n\n{result.stdout}\n{result.stderr}"
+
+        # Check for JavaScript/Node.js tests
+        elif os.path.exists('package.json'):
+            result = subprocess.run(
+                ["npm", "test"],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                shell=True
+            )
+            return f"NPM Test Results:\n\n{result.stdout}\n{result.stderr}"
+
+        else:
+            return "No test framework detected. Please specify pytest, unittest, or ensure package.json exists for npm test."
+
+    except subprocess.TimeoutExpired:
+        return "Error: Tests timed out after 120 seconds"
+    except Exception as e:
+        return f"Error running tests: {str(e)}"
+
+
+@tool
+def generate_tests(file_path: str) -> str:
+    """
+    Generates a basic test template for the specified file.
+    Creates test file with boilerplate for functions found.
+
+    Args:
+        file_path: Path to the source file to generate tests for
+
+    Returns:
+        Path to generated test file or error message
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"Error: File '{file_path}' not found"
+
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+            lines = content.split('\n')
+
+        # Find functions to test
+        functions = []
+        for line in lines:
+            if file_path.endswith('.py') and 'def ' in line and not line.strip().startswith('#'):
+                func_name = line.split('def ')[1].split('(')[0].strip()
+                if not func_name.startswith('_'):  # Skip private functions
+                    functions.append(func_name)
+            elif file_path.endswith(('.js', '.jsx', '.ts', '.tsx')) and 'function ' in line:
+                func_name = line.split('function ')[1].split('(')[0].strip()
+                functions.append(func_name)
+
+        if not functions:
+            return f"No testable functions found in {file_path}"
+
+        # Generate test file
+        if file_path.endswith('.py'):
+            base_name = os.path.basename(file_path).replace('.py', '')
+            test_file = f"test_{base_name}.py"
+
+            test_content = f'''"""Tests for {file_path}"""
+import unittest
+from {base_name} import {', '.join(functions[:5])}
+
+
+class Test{base_name.title().replace('_', '')}(unittest.TestCase):
+'''
+            for func in functions[:5]:
+                test_content += f'''
+    def test_{func}(self):
+        """Test {func} function"""
+        # TODO: Implement test
+        self.fail("Test not implemented")
+'''
+
+            test_content += '''
+
+if __name__ == '__main__':
+    unittest.main()
+'''
+        else:
+            base_name = os.path.basename(file_path)
+            test_file = f"{base_name}.test.js"
+
+            test_content = f'''// Tests for {file_path}
+import {{ {', '.join(functions[:5])} }} from './{base_name}';
+
+describe('{base_name}', () => {{
+'''
+            for func in functions[:5]:
+                test_content += f'''
+  test('{func} should work correctly', () => {{
+    // TODO: Implement test
+    expect(true).toBe(false);
+  }});
+'''
+            test_content += '});\n'
+
+        # Write test file
+        with open(test_file, 'w', encoding='utf-8') as f:
+            f.write(test_content)
+
+        return f"✅ Generated test file: {test_file}\n\nFound {len(functions)} function(s) to test: {', '.join(functions)}\n\nTest templates created. Please implement the test logic."
+
+    except Exception as e:
+        return f"Error generating tests: {str(e)}"
+
+
+@tool
+def coverage_report(path: str = ".") -> str:
+    """
+    Generates test coverage report.
+    Requires pytest-cov for Python or nyc for JavaScript.
+
+    Args:
+        path: Path to analyze (default: current directory)
+
+    Returns:
+        Coverage report or installation instructions
+    """
+    try:
+        # Try Python coverage with pytest-cov
+        result = subprocess.run(
+            ["python", "-m", "pytest", "--cov", "--cov-report=term-missing"],
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+
+        if result.returncode == 0 or 'coverage' in result.stdout.lower():
+            return f"Coverage Report:\n\n{result.stdout}"
+        else:
+            return """Coverage tools not found.
+
+For Python: pip install pytest-cov
+Then run: pytest --cov --cov-report=term-missing
+
+For JavaScript: npm install --save-dev nyc
+Then run: nyc npm test"""
+
+    except FileNotFoundError:
+        return "Error: pytest not found. Install with: pip install pytest pytest-cov"
+    except subprocess.TimeoutExpired:
+        return "Error: Coverage report timed out after 120 seconds"
+    except Exception as e:
+        return f"Error generating coverage report: {str(e)}"
+
+
+@tool
+def create_project_from_template(template_type: str, project_name: str) -> str:
+    """
+    Creates a new project from a template using Copier.
+    Supports: react-vite, flask-api, nextjs, fastapi, python-cli.
+
+    Args:
+        template_type: Type of project (react-vite, flask-api, nextjs, fastapi, python-cli)
+        project_name: Name for the new project
+
+    Returns:
+        Success message with project path or error
+    """
+    try:
+        # Template URL mappings (using popular Copier templates)
+        templates = {
+            'react-vite': 'gh:copier-org/copier-templates-extensions',  # Placeholder
+            'flask-api': 'https://github.com/copier-org/flask-template',
+            'nextjs': 'https://github.com/vercel/next.js/tree/canary/examples/hello-world',
+            'fastapi': 'https://github.com/tiangolo/full-stack-fastapi-template',
+            'python-cli': 'https://github.com/pawamoy/copier-pdm',
+        }
+
+        if template_type not in templates:
+            return f"Unknown template type: {template_type}. Available: {', '.join(templates.keys())}"
+
+        # Check if copier is installed
+        check_copier = subprocess.run(
+            ["copier", "--version"],
+            capture_output=True,
+            text=True
+        )
+
+        if check_copier.returncode != 0:
+            return """Copier not installed. Install with:
+pip install copier
+
+Then you can use templates like:
+- react-vite: React + Vite
+- flask-api: Flask REST API
+- fastapi: FastAPI backend
+- python-cli: Python CLI app"""
+
+        # For now, create basic scaffolds without external templates
+        # This avoids dependency on network/external repos
+        if template_type == 'react-vite':
+            return _create_react_vite_scaffold(project_name)
+        elif template_type == 'flask-api':
+            return _create_flask_api_scaffold(project_name)
+        elif template_type == 'fastapi':
+            return _create_fastapi_scaffold(project_name)
+        elif template_type == 'python-cli':
+            return _create_python_cli_scaffold(project_name)
+
+        return f"Template '{template_type}' not yet implemented. Use create_react_app for React projects."
+
+    except Exception as e:
+        return f"Error creating project from template: {str(e)}"
+
+
+def _create_react_vite_scaffold(project_name: str) -> str:
+    """Helper to create React + Vite scaffold"""
+    try:
+        os.makedirs(project_name, exist_ok=True)
+        os.makedirs(f"{project_name}/src", exist_ok=True)
+
+        # package.json
+        with open(f"{project_name}/package.json", "w") as f:
+            f.write(f'''{{{
+  "name": "{project_name}",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {{
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }},
+  "dependencies": {{
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }},
+  "devDependencies": {{
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
+  }}
+}}
+''')
+
+        # vite.config.js
+        with open(f"{project_name}/vite.config.js", "w") as f:
+            f.write('''import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})
+''')
+
+        # index.html
+        with open(f"{project_name}/index.html", "w") as f:
+            f.write(f'''<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{project_name}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+''')
+
+        # src/main.jsx
+        with open(f"{project_name}/src/main.jsx", "w") as f:
+            f.write('''import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+''')
+
+        # src/App.jsx
+        with open(f"{project_name}/src/App.jsx", "w") as f:
+            f.write(f'''function App() {{
+  return (
+    <div>
+      <h1>Welcome to {project_name}</h1>
+      <p>React + Vite project created by BECA</p>
+    </div>
+  )
+}}
+
+export default App
+''')
+
+        return f"✅ Created React + Vite project: {project_name}\n\nNext steps:\n  cd {project_name}\n  npm install\n  npm run dev"
+
+    except Exception as e:
+        return f"Error creating React Vite scaffold: {str(e)}"
+
+
+def _create_flask_api_scaffold(project_name: str) -> str:
+    """Helper to create Flask API scaffold"""
+    try:
+        os.makedirs(project_name, exist_ok=True)
+
+        # app.py
+        with open(f"{project_name}/app.py", "w") as f:
+            f.write(f'''"""
+{project_name} - Flask REST API
+"""
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def index():
+    return jsonify({{"message": "Welcome to {project_name} API", "status": "running"}})
+
+
+@app.route('/api/health')
+def health():
+    return jsonify({{"status": "healthy"}})
+
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+''')
+
+        # requirements.txt
+        with open(f"{project_name}/requirements.txt", "w") as f:
+            f.write('flask>=3.0.0\nflask-cors>=4.0.0\n')
+
+        # README.md
+        with open(f"{project_name}/README.md", "w") as f:
+            f.write(f'''# {project_name}
+
+Flask REST API created by BECA
+
+## Setup
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+API will be available at http://localhost:5000
+''')
+
+        return f"✅ Created Flask API project: {project_name}\n\nNext steps:\n  cd {project_name}\n  pip install -r requirements.txt\n  python app.py"
+
+    except Exception as e:
+        return f"Error creating Flask API scaffold: {str(e)}"
+
+
+def _create_fastapi_scaffold(project_name: str) -> str:
+    """Helper to create FastAPI scaffold"""
+    try:
+        os.makedirs(project_name, exist_ok=True)
+
+        # main.py
+        with open(f"{project_name}/main.py", "w") as f:
+            f.write(f'''"""
+{project_name} - FastAPI application
+"""
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI(title="{project_name}")
+
+
+class Item(BaseModel):
+    name: str
+    description: str = None
+
+
+@app.get("/")
+async def root():
+    return {{"message": "Welcome to {project_name} API"}}
+
+
+@app.get("/health")
+async def health():
+    return {{"status": "healthy"}}
+
+
+@app.post("/items/")
+async def create_item(item: Item):
+    return {{"item": item, "status": "created"}}
+''')
+
+        # requirements.txt
+        with open(f"{project_name}/requirements.txt", "w") as f:
+            f.write('fastapi>=0.109.0\nuvicorn[standard]>=0.27.0\n')
+
+        # README.md
+        with open(f"{project_name}/README.md", "w") as f:
+            f.write(f'''# {project_name}
+
+FastAPI application created by BECA
+
+## Setup
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+API docs: http://localhost:8000/docs
+''')
+
+        return f"✅ Created FastAPI project: {project_name}\n\nNext steps:\n  cd {project_name}\n  pip install -r requirements.txt\n  uvicorn main:app --reload"
+
+    except Exception as e:
+        return f"Error creating FastAPI scaffold: {str(e)}"
+
+
+def _create_python_cli_scaffold(project_name: str) -> str:
+    """Helper to create Python CLI scaffold"""
+    try:
+        os.makedirs(project_name, exist_ok=True)
+        os.makedirs(f"{project_name}/{project_name}", exist_ok=True)
+
+        # cli.py
+        with open(f"{project_name}/{project_name}/cli.py", "w") as f:
+            f.write(f'''"""
+{project_name} CLI
+"""
+import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser(description="{project_name} command line tool")
+    parser.add_argument('command', help='Command to run')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+
+    args = parser.parse_args()
+
+    if args.command == 'hello':
+        print(f"Hello from {project_name}!")
+    else:
+        print(f"Unknown command: {{args.command}}")
+
+
+if __name__ == '__main__':
+    main()
+''')
+
+        # __init__.py
+        with open(f"{project_name}/{project_name}/__init__.py", "w") as f:
+            f.write(f'"""\\n{project_name}\\n"""\n__version__ = "0.1.0"\n')
+
+        # setup.py
+        with open(f"{project_name}/setup.py", "w") as f:
+            f.write(f'''from setuptools import setup, find_packages
+
+setup(
+    name="{project_name}",
+    version="0.1.0",
+    packages=find_packages(),
+    entry_points={{
+        'console_scripts': [
+            '{project_name}={project_name}.cli:main',
+        ],
+    }},
+)
+''')
+
+        return f"✅ Created Python CLI project: {project_name}\n\nNext steps:\n  cd {project_name}\n  pip install -e .\n  {project_name} hello"
+
+    except Exception as e:
+        return f"Error creating Python CLI scaffold: {str(e)}"
+
+
 # Export all tools as a list
 BECA_TOOLS = [
     create_react_app,
@@ -494,4 +1190,11 @@ BECA_TOOLS = [
     run_python,
     run_command,
     find_in_files,
+    analyze_code,
+    find_bugs,
+    suggest_improvements,
+    run_tests,
+    generate_tests,
+    coverage_report,
+    create_project_from_template,
 ]
