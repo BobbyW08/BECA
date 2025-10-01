@@ -411,6 +411,17 @@ def run_command(command: str) -> str:
         Command output or error message
     """
     try:
+        # Handle JSON string if passed
+        if command.startswith('{'):
+            try:
+                parsed = json.loads(command)
+                command = parsed.get('command', command)
+            except:
+                pass
+
+        # Clean command
+        command = command.strip()
+
         result = subprocess.run(
             command,
             shell=True,
