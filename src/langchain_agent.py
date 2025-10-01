@@ -49,7 +49,15 @@ Use the following format:
 Question: the input question you must answer
 Thought: you should always think about what to do
 Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action (must be valid JSON for multi-argument tools)
+Action Input: the input to the action
+
+CRITICAL TOOL INPUT RULES:
+- For tools with ONE parameter: provide ONLY the value, NOT JSON
+  Example: create_react_app needs app_name → Action Input: my-todo-app
+- For tools with MULTIPLE parameters: use JSON format
+  Example: write_file needs file_path and content → Action Input: {{"file_path": "app.py", "content": "print('hi')"}}
+- NEVER wrap single parameters in JSON objects
+
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer

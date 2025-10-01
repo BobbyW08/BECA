@@ -4,7 +4,7 @@ BECA GUI - Gradio interface for BECA agent
 import sys
 import os
 import gradio as gr
-from typing import List, Tuple
+from typing import List, Dict
 
 # Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -23,32 +23,35 @@ except ImportError as e:
     AGENT_AVAILABLE = False
 
 
-def chat_with_beca(message: str, history: List[List[str]]):
+def chat_with_beca(message: str, history: List[Dict[str, str]]):
     """
     Chat function for BECA using LangChain agent.
 
     Args:
         message: User's message
-        history: Chat history (list of tuples: (user_msg, assistant_msg))
+        history: Chat history (list of message dicts with 'role' and 'content')
 
     Returns:
-        Assistant's response
+        Updated chat history
     """
     if not AGENT_AVAILABLE:
-        history.append([message, "ERROR: LangChain agent not available. Check the console for errors."])
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": "ERROR: LangChain agent not available. Check the console for errors."})
         return history
 
     if not message or not message.strip():
-        history.append([message, "Please enter a message."])
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": "Please enter a message."})
         return history
 
     try:
+        history.append({"role": "user", "content": message})
         response = chat_with_agent(message)
-        history.append([message, response])
+        history.append({"role": "assistant", "content": response})
         return history
     except Exception as e:
         error_msg = f"Error: {str(e)}\n\nMake sure Ollama is running."
-        history.append([message, error_msg])
+        history.append({"role": "assistant", "content": error_msg})
         return history
 
 # Create Gradio interface
@@ -60,7 +63,8 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
         label="Chat with BECA",
         height=500,
         show_label=True,
-        show_copy_button=True
+        show_copy_button=True,
+        type="messages"  # Use modern message format
     )
 
     with gr.Row():

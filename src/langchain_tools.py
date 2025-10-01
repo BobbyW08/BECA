@@ -22,6 +22,17 @@ def create_react_app(app_name: str) -> str:
         Success message with created folder path
     """
     try:
+        # Handle case where LLM passes JSON string instead of just app_name
+        if app_name.startswith('{'):
+            try:
+                parsed = json.loads(app_name)
+                app_name = parsed.get('app_name', app_name)
+            except:
+                pass  # If JSON parsing fails, use as-is
+
+        # Clean app_name (remove invalid characters)
+        app_name = app_name.strip().replace('"', '').replace("'", '')
+
         # Create the root folder for the React app
         os.makedirs(app_name, exist_ok=True)
 
