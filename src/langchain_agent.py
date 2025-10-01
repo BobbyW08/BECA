@@ -3,7 +3,7 @@ LangChain Agent for BECA using Ollama
 """
 import sys
 from langchain_ollama import ChatOllama
-from langchain.agents import create_structured_chat_agent, AgentExecutor
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import PromptTemplate
 from langchain_tools import BECA_TOOLS
 
@@ -34,32 +34,23 @@ llm = ChatOllama(
     num_predict=512,  # Limit response length
 )
 
-# Create agent prompt - using structured chat format for better reliability
+# Create agent prompt - using tool calling format (works best with llama3.1)
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 agent_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are BECA (Badass Expert Coding Agent), an autonomous coding assistant.
+    ("system", """You are BECA (Badass Expert Coding Agent), a helpful AI coding assistant.
 
-Your capabilities:
-- Build applications and write code
-- Use tools to interact with files, git, web search, etc.
-- Remember user preferences and past conversations
-
-Guidelines:
+Key points:
 - For simple questions, answer directly without tools
-- Use tools for actual tasks (file operations, searches, git commands)
-- Be concise but helpful
-- When you complete a tool action successfully, immediately provide your final answer
-
-Available tools: {tools}
-
-Tool names: {tool_names}"""),
+- Use tools for actual tasks (file operations, git, searches)
+- After using a tool, provide a clear summary of what was done
+- Be concise and helpful"""),
     ("human", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad"),
 ])
 
-# Create the agent
-agent = create_structured_chat_agent(
+# Create the agent using tool calling (better for llama3.1)
+agent = create_tool_calling_agent(
     llm=llm,
     tools=BECA_TOOLS,
     prompt=agent_prompt,
