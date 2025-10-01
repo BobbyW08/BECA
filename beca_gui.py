@@ -26,33 +26,45 @@ except ImportError as e:
 def chat_with_beca(message: str, history: List[Dict[str, str]]):
     """
     Chat function for BECA using LangChain agent.
+    Uses generator pattern to immediately show user message.
 
     Args:
         message: User's message
         history: Chat history (list of message dicts with 'role' and 'content')
 
-    Returns:
-        Updated chat history
+    Yields:
+        Updated chat history at each step
     """
+    # Immediately show user's message
+    history.append({"role": "user", "content": message})
+    yield history
+
     if not AGENT_AVAILABLE:
-        history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": "ERROR: LangChain agent not available. Check the console for errors."})
-        return history
+        yield history
+        return
 
     if not message or not message.strip():
-        history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": "Please enter a message."})
-        return history
+        yield history
+        return
 
     try:
-        history.append({"role": "user", "content": message})
+        # Show thinking indicator
+        history.append({"role": "assistant", "content": "🤔 Thinking..."})
+        yield history
+
+        # Get actual response
         response = chat_with_agent(message)
-        history.append({"role": "assistant", "content": response})
-        return history
+
+        # Replace thinking message with actual response
+        history[-1] = {"role": "assistant", "content": response}
+        yield history
+
     except Exception as e:
         error_msg = f"Error: {str(e)}\n\nMake sure Ollama is running."
-        history.append({"role": "assistant", "content": error_msg})
-        return history
+        history[-1] = {"role": "assistant", "content": error_msg}
+        yield history
 
 # Create Gradio interface
 with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:

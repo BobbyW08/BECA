@@ -26,12 +26,15 @@ if sys.platform == "win32":
 OLLAMA_MODEL = "llama3.1:8b"  # Better for conversation + tool use
 OLLAMA_URL = "http://127.0.0.1:11434"
 
-# Create the LLM
+# Create the LLM with optimizations for speed
 llm = ChatOllama(
     model=OLLAMA_MODEL,
     base_url=OLLAMA_URL,
-    temperature=0.3,  # Slightly higher for better reasoning
-    num_predict=512,  # Limit response length
+    temperature=0.3,
+    num_predict=256,  # Shorter responses = faster
+    num_ctx=2048,  # Smaller context window = faster
+    top_k=20,  # Speed optimization
+    top_p=0.9,  # Speed optimization
 )
 
 # Create agent prompt - using tool calling format (works best with llama3.1)
