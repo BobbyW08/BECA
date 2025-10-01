@@ -23,7 +23,7 @@ except ImportError as e:
     AGENT_AVAILABLE = False
 
 
-def chat_with_beca(message: str, history: List[Tuple[str, str]]) -> str:
+def chat_with_beca(message: str, history: List[List[str]]):
     """
     Chat function for BECA using LangChain agent.
 
@@ -35,16 +35,21 @@ def chat_with_beca(message: str, history: List[Tuple[str, str]]) -> str:
         Assistant's response
     """
     if not AGENT_AVAILABLE:
-        return "ERROR: LangChain agent not available. Check the console for errors."
+        history.append([message, "ERROR: LangChain agent not available. Check the console for errors."])
+        return history
 
     if not message or not message.strip():
-        return "Please enter a message."
+        history.append([message, "Please enter a message."])
+        return history
 
     try:
         response = chat_with_agent(message)
-        return response
+        history.append([message, response])
+        return history
     except Exception as e:
-        return f"Error: {str(e)}\n\nMake sure Ollama is running."
+        error_msg = f"Error: {str(e)}\n\nMake sure Ollama is running."
+        history.append([message, error_msg])
+        return history
 
 # Create Gradio interface
 with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
@@ -86,5 +91,4 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
 
 if __name__ == "__main__":
     print("Starting BECA GUI...")
-    print("Open your browser to http://localhost:7860")
-    demo.launch(server_name="127.0.0.1", server_port=7860)
+    demo.launch(server_name="127.0.0.1", share=False)

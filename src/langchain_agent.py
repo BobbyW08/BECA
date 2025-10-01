@@ -41,7 +41,7 @@ Action Input: the input to the action
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer
-Final Answer: the final answer to the original input question
+Final Answer: the final answer to the original input question. IMPORTANT: Include the full details from your observations, not just a summary.
 
 Question: {input}
 Thought: {agent_scratchpad}
@@ -61,7 +61,8 @@ agent_executor = AgentExecutor(
     tools=BECA_TOOLS,
     verbose=True,  # Show thinking process
     handle_parsing_errors=True,
-    max_iterations=10,
+    max_iterations=20,  # Increased for complex planning tasks
+    max_execution_time=120,  # 2 minutes timeout
 )
 
 
