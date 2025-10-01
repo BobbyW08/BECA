@@ -3,5 +3,13 @@ requests
 pydantic
 jinja2
 
+# LangChain - Agent framework
+langchain
+langchain-community
+langchain-ollama
+
+# GUI - Gradio
+gradio
+
 # Optional: Uncomment if needed
 # schedule
