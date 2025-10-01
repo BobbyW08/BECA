@@ -3,7 +3,7 @@ LangChain Agent for BECA using Ollama
 """
 import sys
 from langchain_ollama import ChatOllama
-from langchain.agents import create_react_agent, AgentExecutor
+from langchain.agents import create_structured_chat_agent, AgentExecutor
 from langchain_core.prompts import PromptTemplate
 from langchain_tools import BECA_TOOLS
 
@@ -34,58 +34,50 @@ llm = ChatOllama(
     num_predict=512,  # Limit response length
 )
 
-# Create agent prompt
-# ReAct pattern: Thought, Action, Action Input, Observation, Thought, ...
-agent_prompt = PromptTemplate.from_template(
-    """You are BECA (Badass Expert Coding Agent), an autonomous coding assistant. Help users build applications, fix bugs, and write code.
+# Create agent prompt - using structured chat format for better reliability
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-IMPORTANT:
-- For simple questions (like "what's your name?"), answer directly without tools
-- Use tools only for actual coding/file tasks
-- Keep responses concise and direct
+agent_prompt = ChatPromptTemplate.from_messages([
+    ("system", """You are BECA (Badass Expert Coding Agent), an autonomous coding assistant.
 
-You have access to the following tools:
+Your capabilities:
+- Build applications and write code
+- Use tools to interact with files, git, web search, etc.
+- Remember user preferences and past conversations
 
-{tools}
+Guidelines:
+- For simple questions, answer directly without tools
+- Use tools for actual tasks (file operations, searches, git commands)
+- Be concise but helpful
+- When you complete a tool action successfully, immediately provide your final answer
 
-RESPONSE FORMAT (use EXACTLY this format):
+Available tools: {tools}
 
-Question: the input question you must answer
-Thought: think about what to do (one sentence)
-Action: tool name from [{tool_names}]
-Action Input: tool input value (NO markdown, NO formatting)
-
-TOOL INPUT RULES:
-- Single parameter tools: provide ONLY the value
-  Example → Action Input: my-app-name
-- Multi-parameter tools: use JSON
-  Example → Action Input: {{"param1": "value1", "param2": "value2"}}
-
-Observation: the result
-... (repeat Thought/Action/Input/Observation as needed)
-Thought: I know the final answer
-Final Answer: detailed answer with observations
-
-Question: {input}
-Thought: {agent_scratchpad}
-"""
-)
+Tool names: {tool_names}"""),
+    ("human", "{input}"),
+    MessagesPlaceholder(variable_name="agent_scratchpad"),
+])
 
 # Create the agent
-agent = create_react_agent(
+agent = create_structured_chat_agent(
     llm=llm,
     tools=BECA_TOOLS,
     prompt=agent_prompt,
 )
+
+# Custom parsing error handler
+def handle_parsing_error(error) -> str:
+    """Handle parsing errors by providing guidance"""
+    return "I encountered a formatting issue. Let me provide a clear response based on what I've done so far."
 
 # Create the agent executor
 agent_executor = AgentExecutor(
     agent=agent,
     tools=BECA_TOOLS,
     verbose=True,  # Show thinking process
-    handle_parsing_errors=True,
-    max_iterations=10,  # Reduced to prevent loops
-    max_execution_time=60,  # 1 minute timeout
+    handle_parsing_errors=handle_parsing_error,
+    max_iterations=5,  # Further reduced to force faster conclusions
+    max_execution_time=30,  # Shorter timeout
     return_intermediate_steps=True,  # Return steps for debugging
     early_stopping_method="generate",  # Generate response on max iterations
 )
