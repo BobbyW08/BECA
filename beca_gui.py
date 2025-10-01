@@ -53,7 +53,7 @@ def chat_with_beca(message: str, history: List[List[str]]):
 
 # Create Gradio interface
 with gr.Blocks(title="BECA - Your Autonomous Coding Agent") as demo:
-    gr.Markdown("# 🤖 BECA - Build, Enhance, Code, Automate")
+    gr.Markdown("# 🤖 BECA - Badass Expert Coding Agent")
     gr.Markdown("Your personal AI coding assistant powered by local Qwen2.5-coder model")
 
     chatbot = gr.Chatbot(
