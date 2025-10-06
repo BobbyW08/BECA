@@ -9,6 +9,13 @@ import urllib.request
 import urllib.parse
 import json
 
+# Import file tracker for GUI updates
+try:
+    from file_tracker import file_tracker
+    FILE_TRACKER_AVAILABLE = True
+except ImportError:
+    FILE_TRACKER_AVAILABLE = False
+
 
 @tool
 def create_react_app(app_name: str) -> str:
@@ -50,6 +57,11 @@ def create_react_app(app_name: str) -> str:
         with open(package_json_path, "w") as f:
             f.write(f'{{\n  "name": "{app_name}",\n  "version": "1.0.0"\n}}\n')
 
+        # Track new files for GUI
+        if FILE_TRACKER_AVAILABLE:
+            file_tracker.mark_file_created(index_js_path)
+            file_tracker.mark_file_created(package_json_path)
+
         return f"Successfully created React app scaffold in '{app_name}/' with src/index.js and package.json"
     except Exception as e:
         return f"Error creating React scaffold: {str(e)}"
@@ -89,11 +101,24 @@ def write_file(file_path: str, content: str) -> str:
         Success message or error
     """
     try:
+        # Check if file exists (to determine if new or modified)
+        file_exists = os.path.exists(file_path)
+
         # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        dir_path = os.path.dirname(file_path)
+        if dir_path:
+            os.makedirs(dir_path, exist_ok=True)
 
         with open(file_path, 'w') as f:
             f.write(content)
+
+        # Track file operation for GUI
+        if FILE_TRACKER_AVAILABLE:
+            if file_exists:
+                file_tracker.mark_file_modified(file_path)
+            else:
+                file_tracker.mark_file_created(file_path)
+
         return f"Successfully wrote {len(content)} characters to '{file_path}'"
     except Exception as e:
         return f"Error writing file: {str(e)}"

@@ -11,5 +11,9 @@ langchain-ollama
 # GUI - Gradio
 gradio
 
+# GUI Enhancements
+pygments  # Syntax highlighting
+watchdog  # File system watching
+
 # Optional: Uncomment if needed
 # schedule
