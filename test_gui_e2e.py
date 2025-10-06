@@ -57,7 +57,7 @@ class TestE2EWorkflows:
         print("      Step 1: Creating file with write_file()...")
         test_file = "new_module.py"
         content = "def greet(name):\n    return f'Hello, {name}!'\n"
-        result = write_file(test_file, content)
+        result = write_file.invoke({"file_path": test_file, "content": content})
 
         assert "Successfully wrote" in result, f"Failed to create file: {result}"
         assert os.path.exists(test_file), "File not created on filesystem"
@@ -114,7 +114,7 @@ class TestE2EWorkflows:
         file_tracker.clear_status()
 
         modified_content = "DEBUG = True\nVERSION = '1.0.1'\nLOG_LEVEL = 'INFO'\n"
-        result = write_file(test_file, modified_content)
+        result = write_file.invoke({"file_path": test_file, "content": modified_content})
 
         assert "Successfully wrote" in result, f"Failed to modify file: {result}"
 
@@ -161,7 +161,7 @@ class TestE2EWorkflows:
         # Step 1: Create React app using tool
         print("      Step 1: Creating React app with create_react_app()...")
         app_name = "my-todo-app"
-        result = create_react_app(app_name)
+        result = create_react_app.invoke({"app_name": app_name})
 
         assert "Successfully created" in result, f"Failed to create app: {result}"
         assert os.path.exists(app_name), "App directory not created"
@@ -268,21 +268,22 @@ class TestE2EWorkflows:
         new_files = []
         for i in range(5):
             filename = f"module_{i}.py"
-            write_file(filename, f"# Module {i}\ndef func_{i}(): pass\n")
+            write_file.invoke({"file_path": filename, "content": f"# Module {i}\ndef func_{i}(): pass\n"})
             new_files.append(filename)
 
         # Step 2: Create and modify 3 files
         print("      Step 2: Creating and modifying 3 files...")
         modified_files = []
+        # Clear tracker once before modifications
+        file_tracker.clear_status()
+
         for i in range(3):
             filename = f"config_{i}.py"
             # Create
             with open(filename, 'w') as f:
                 f.write("original")
-            # Clear tracker
-            file_tracker.clear_status()
             # Modify
-            write_file(filename, "modified content")
+            write_file.invoke({"file_path": filename, "content": "modified content"})
             modified_files.append(filename)
 
         # Step 3: Refresh file tree

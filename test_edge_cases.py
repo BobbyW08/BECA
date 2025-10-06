@@ -33,6 +33,8 @@ class TestFileSystemEdgeCases:
         self.test_dir = tempfile.mkdtemp(prefix="beca_edge_")
         self.original_cwd = os.getcwd()
         os.chdir(self.test_dir)
+        # Set file tree manager root directory
+        file_tree_manager.root_dir = Path(self.test_dir)
         print(f"   Test directory: {self.test_dir}")
 
     def teardown(self):
@@ -169,6 +171,8 @@ class TestCodeViewerEdgeCases:
         self.test_dir = tempfile.mkdtemp(prefix="beca_viewer_edge_")
         self.original_cwd = os.getcwd()
         os.chdir(self.test_dir)
+        # Set file tree manager root directory
+        file_tree_manager.root_dir = Path(self.test_dir)
         print(f"   Test directory: {self.test_dir}")
 
     def teardown(self):

@@ -53,7 +53,7 @@ class TestFileTrackerIntegration:
         # Write a new file
         test_file = "test_new.py"
         content = "def test():\n    pass\n"
-        result = write_file(test_file, content)
+        result = write_file.invoke({"file_path": test_file, "content": content})
 
         assert "Successfully wrote" in result, f"write_file failed: {result}"
         assert os.path.exists(test_file), "File not created"
@@ -78,7 +78,7 @@ class TestFileTrackerIntegration:
 
         # Modify the file using write_file
         new_content = "modified content\n"
-        result = write_file(test_file, new_content)
+        result = write_file.invoke({"file_path": test_file, "content": new_content})
 
         assert "Successfully wrote" in result, f"write_file failed: {result}"
 
@@ -94,7 +94,7 @@ class TestFileTrackerIntegration:
         print("\n   Testing create_react_app() tracks files...")
 
         app_name = "test-app"
-        result = create_react_app(app_name)
+        result = create_react_app.invoke({"app_name": app_name})
 
         assert "Successfully created" in result, f"create_react_app failed: {result}"
         assert os.path.exists(app_name), "App directory not created"
@@ -127,6 +127,9 @@ class TestFileTreeManagerIntegration:
         self.original_cwd = os.getcwd()
         os.chdir(self.test_dir)
         file_tracker.clear_status()
+
+        # Set file tree manager root directory
+        file_tree_manager.root_dir = Path(self.test_dir)
 
         # Create some test files and folders
         os.makedirs("src", exist_ok=True)
@@ -228,7 +231,7 @@ class TestCodeViewerIntegration:
         # Create and track a file
         test_file = "test_view.py"
         content = "def hello():\n    return 'world'\n"
-        write_file(test_file, content)
+        write_file.invoke({"file_path": test_file, "content": content})
 
         # View the file
         html, error = code_viewer.read_and_highlight(test_file)

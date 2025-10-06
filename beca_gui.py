@@ -319,5 +319,13 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent", theme=gr.themes.Soft
     )
 
 if __name__ == "__main__":
-    print("Starting BECA GUI...")
-    demo.launch(server_name="127.0.0.1", share=False)
+    print("Starting Enhanced BECA GUI...")
+    print("=" * 60)
+    print("🚀 BECA GUI with Visual Enhancements")
+    print("=" * 60)
+    print("Features:")
+    print("  📁 File Tree Panel (left)")
+    print("  💬 Chat Panel (center)")
+    print("  📝 Code Viewer & Diff Panel (right)")
+    print("=" * 60)
+    demo.launch(server_name="127.0.0.1", server_port=7862, share=False)
