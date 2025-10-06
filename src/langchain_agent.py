@@ -24,7 +24,7 @@ if sys.platform == "win32":
 
 # Ollama configuration
 OLLAMA_MODEL = "llama3.1:8b"  # Better for conversation + tool use
-OLLAMA_URL = "http://127.0.0.1:11434"
+OLLAMA_URL = "http://34.28.62.86:11434"
 
 # Create the LLM with optimizations for speed
 llm = ChatOllama(

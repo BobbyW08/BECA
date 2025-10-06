@@ -1,11 +1,47 @@
-# BECA - Your Autonomous Coding Agent
+# BECA - Badass Expert Coding Agent 🤖
 
-BECA is a locally-running coding agent designed to assist with various development tasks.
+BECA is an AI coding assistant powered by LangChain and Ollama, running on cloud GPU for fast responses.
 
-## Core Use Cases
+## Quick Start
 
-*   **Scaffold Applications:** Automatically generate the file and folder structure for new projects, such as React + Flask applications.
-*   **Maintain Code Style:** Learn and apply your personal coding style and preferences to new and existing code.
-*   **Automate Testing:** Generate unit tests and integration tests for your codebase.
-*   **Conduct Research:** Perform web searches to find documentation and solutions for development challenges.
-*   **Manage Memory:** Maintain a memory of successful operations to improve future performance.
+See [START-BECA.md](START-BECA.md) for complete startup instructions.
+
+**TL;DR:**
+```powershell
+# 1. Start cloud GPU
+gcloud compute instances start beca-ollama --zone=us-central1-c --project=beca-0001
+
+# 2. Launch BECA
+cd C:\dev && .\.venv\Scripts\Activate.ps1 && python beca_gui.py
+```
+
+## Features
+
+*   **27 Development Tools:** File operations, git integration, testing, code analysis, web search
+*   **Persistent Memory:** Remembers your preferences and past conversations
+*   **Project Templates:** Scaffold React, Flask, FastAPI, and Python CLI projects
+*   **Cloud GPU Power:** Uses Google Cloud T4 GPU for fast inference
+*   **Local-First:** No API keys needed, runs on your infrastructure
+
+## Architecture
+
+- **Frontend:** Gradio web interface ([beca_gui.py](beca_gui.py))
+- **Agent:** LangChain ReAct agent ([src/langchain_agent.py](src/langchain_agent.py))
+- **LLM:** Llama 3.1 8B via Ollama (cloud GPU)
+- **Tools:** 27 tools for development tasks ([src/langchain_tools.py](src/langchain_tools.py), [src/memory_tools.py](src/memory_tools.py))
+- **Memory:** SQLite database for conversations and preferences ([src/memory_db.py](src/memory_db.py))
+
+## Files
+
+- `START-BECA.md` - Complete startup guide
+- `create-vm.ps1` - Create cloud GPU VM
+- `setup-firewall.ps1` - Configure firewall
+- `beca_gui.py` - Launch the web interface
+- `src/` - Source code (agent, tools, memory)
+
+## Cost Management
+
+Cloud GPU costs ~$0.30/hour. Always stop the VM when not in use:
+```powershell
+gcloud compute instances stop beca-ollama --zone=us-central1-c --project=beca-0001
+```
