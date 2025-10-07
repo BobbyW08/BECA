@@ -39,6 +39,14 @@ except ImportError as e:
     print(f"Warning: Could not import file tracker: {e}")
     FILE_TRACKER_AVAILABLE = False
 
+# Import autonomous learning system
+try:
+    from autonomous_learning import start_autonomous_learning, get_learning_stats
+    AUTONOMOUS_LEARNING_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Could not import autonomous learning: {e}")
+    AUTONOMOUS_LEARNING_AVAILABLE = False
+
 # Global state for file operations
 current_file_content = {}  # Store original content for diffing
 
@@ -168,10 +176,33 @@ def chat_with_beca(message: str, history: List[Dict[str, str]]):
         history[-1] = {"role": "assistant", "content": error_msg}
         yield history, refresh_file_tree(), f"Error: {str(e)}"
 
+# Function to get learning status
+def get_learning_status() -> str:
+    """Get current autonomous learning status"""
+    if AUTONOMOUS_LEARNING_AVAILABLE:
+        try:
+            stats = get_learning_stats()
+            if stats['active']:
+                return f"🧠 Auto-Learning Active | Learned: {stats['total_learned']} resources"
+            else:
+                return "🧠 Auto-Learning: Starting..."
+        except:
+            return "🧠 Auto-Learning: Initializing..."
+    return "Auto-Learning: Not Available"
+
 # Create Enhanced Gradio interface with three panels
 with gr.Blocks(title="BECA - Your Autonomous Coding Agent", theme=gr.themes.Soft()) as demo:
     gr.Markdown("# 🤖 BECA - Badass Expert Coding Agent")
-    gr.Markdown("Your personal AI coding assistant with visual file management 🧠")
+    gr.Markdown("Your personal AI coding assistant with visual file management & autonomous learning 🧠")
+
+    # Learning status bar
+    if AUTONOMOUS_LEARNING_AVAILABLE:
+        learning_status = gr.Textbox(
+            label="Autonomous Learning Status",
+            value=get_learning_status(),
+            interactive=False,
+            max_lines=1
+        )
 
     # Status bar
     status_bar = gr.Textbox(
@@ -328,4 +359,19 @@ if __name__ == "__main__":
     print("  💬 Chat Panel (center)")
     print("  📝 Code Viewer & Diff Panel (right)")
     print("=" * 60)
+
+    # Start autonomous learning in background
+    if AUTONOMOUS_LEARNING_AVAILABLE:
+        print("\n🧠 Starting Autonomous Learning System...")
+        print("   BECA will continuously learn in the background")
+        print("   Learning from: Documentation, Code Patterns, AI Models")
+        start_autonomous_learning()
+        print("   ✅ Autonomous learning activated!")
+    else:
+        print("\n⚠️  Autonomous learning not available")
+
+    print("\n" + "=" * 60)
+    print("🌐 Launching BECA GUI on http://127.0.0.1:7862")
+    print("=" * 60 + "\n")
+
     demo.launch(server_name="127.0.0.1", server_port=7862, share=False)

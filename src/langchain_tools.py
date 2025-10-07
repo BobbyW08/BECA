@@ -20,10 +20,11 @@ except ImportError:
 @tool
 def create_react_app(app_name: str) -> str:
     """
-    Creates a basic React application scaffold with folder structure.
+    Creates a basic React application scaffold with folder structure in C:/ drive.
+    IMPORTANT: You must ask the user for a project name before calling this tool.
 
     Args:
-        app_name: Name of the React application to create
+        app_name: Name of the React application to create (ask user first!)
 
     Returns:
         Success message with created folder path
@@ -40,11 +41,14 @@ def create_react_app(app_name: str) -> str:
         # Clean app_name (remove invalid characters)
         app_name = app_name.strip().replace('"', '').replace("'", '')
 
+        # Create the full path in C:/ drive
+        project_path = os.path.join("C:/", app_name)
+
         # Create the root folder for the React app
-        os.makedirs(app_name, exist_ok=True)
+        os.makedirs(project_path, exist_ok=True)
 
         # Create a 'src' directory inside the root folder
-        src_path = os.path.join(app_name, "src")
+        src_path = os.path.join(project_path, "src")
         os.makedirs(src_path, exist_ok=True)
 
         # Create a placeholder index.js file
@@ -53,7 +57,7 @@ def create_react_app(app_name: str) -> str:
             f.write("// Placeholder for React app\nimport React from 'react';\n")
 
         # Create package.json
-        package_json_path = os.path.join(app_name, "package.json")
+        package_json_path = os.path.join(project_path, "package.json")
         with open(package_json_path, "w") as f:
             f.write(f'{{\n  "name": "{app_name}",\n  "version": "1.0.0"\n}}\n')
 
@@ -62,7 +66,7 @@ def create_react_app(app_name: str) -> str:
             file_tracker.mark_file_created(index_js_path)
             file_tracker.mark_file_created(package_json_path)
 
-        return f"Successfully created React app scaffold in '{app_name}/' with src/index.js and package.json"
+        return f"Successfully created React app scaffold in '{project_path}' with src/index.js and package.json"
     except Exception as e:
         return f"Error creating React scaffold: {str(e)}"
 
@@ -904,12 +908,13 @@ Then run: nyc npm test"""
 @tool
 def create_project_from_template(template_type: str, project_name: str) -> str:
     """
-    Creates a new project from a template using Copier.
+    Creates a new project from a template in C:/ drive.
     Supports: react-vite, flask-api, nextjs, fastapi, python-cli.
+    IMPORTANT: You must ask the user for a project name before calling this tool.
 
     Args:
         template_type: Type of project (react-vite, flask-api, nextjs, fastapi, python-cli)
-        project_name: Name for the new project
+        project_name: Name for the new project (ask user first!)
 
     Returns:
         Success message with project path or error
@@ -962,10 +967,11 @@ Then you can use templates like:
 
 
 def _create_react_vite_scaffold(project_name: str) -> str:
-    """Helper to create React + Vite scaffold"""
+    """Helper to create React + Vite scaffold in C:/ drive"""
     try:
-        os.makedirs(project_name, exist_ok=True)
-        os.makedirs(f"{project_name}/src", exist_ok=True)
+        project_path = os.path.join("C:/", project_name)
+        os.makedirs(project_path, exist_ok=True)
+        os.makedirs(f"{project_path}/src", exist_ok=True)
 
         # package.json
         package_json_content = f'''{{
@@ -987,11 +993,11 @@ def _create_react_vite_scaffold(project_name: str) -> str:
     "vite": "^5.0.8"
   }}
 }}'''
-        with open(f"{project_name}/package.json", "w") as f:
+        with open(f"{project_path}/package.json", "w") as f:
             f.write(package_json_content)
 
         # vite.config.js
-        with open(f"{project_name}/vite.config.js", "w") as f:
+        with open(f"{project_path}/vite.config.js", "w") as f:
             f.write('''import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -1001,7 +1007,7 @@ export default defineConfig({
 ''')
 
         # index.html
-        with open(f"{project_name}/index.html", "w") as f:
+        with open(f"{project_path}/index.html", "w") as f:
             f.write(f'''<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -1017,7 +1023,7 @@ export default defineConfig({
 ''')
 
         # src/main.jsx
-        with open(f"{project_name}/src/main.jsx", "w") as f:
+        with open(f"{project_path}/src/main.jsx", "w") as f:
             f.write('''import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
@@ -1030,7 +1036,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ''')
 
         # src/App.jsx
-        with open(f"{project_name}/src/App.jsx", "w") as f:
+        with open(f"{project_path}/src/App.jsx", "w") as f:
             f.write(f'''function App() {{
   return (
     <div>
@@ -1043,19 +1049,20 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 export default App
 ''')
 
-        return f"✅ Created React + Vite project: {project_name}\n\nNext steps:\n  cd {project_name}\n  npm install\n  npm run dev"
+        return f"✅ Created React + Vite project: {project_path}\n\nNext steps:\n  cd {project_path}\n  npm install\n  npm run dev"
 
     except Exception as e:
         return f"Error creating React Vite scaffold: {str(e)}"
 
 
 def _create_flask_api_scaffold(project_name: str) -> str:
-    """Helper to create Flask API scaffold"""
+    """Helper to create Flask API scaffold in C:/ drive"""
     try:
-        os.makedirs(project_name, exist_ok=True)
+        project_path = os.path.join("C:/", project_name)
+        os.makedirs(project_path, exist_ok=True)
 
         # app.py
-        with open(f"{project_name}/app.py", "w") as f:
+        with open(f"{project_path}/app.py", "w") as f:
             f.write(f'''"""
 {project_name} - Flask REST API
 """
@@ -1079,11 +1086,11 @@ if __name__ == '__main__':
 ''')
 
         # requirements.txt
-        with open(f"{project_name}/requirements.txt", "w") as f:
+        with open(f"{project_path}/requirements.txt", "w") as f:
             f.write('flask>=3.0.0\nflask-cors>=4.0.0\n')
 
         # README.md
-        with open(f"{project_name}/README.md", "w") as f:
+        with open(f"{project_path}/README.md", "w") as f:
             f.write(f'''# {project_name}
 
 Flask REST API created by BECA
@@ -1097,19 +1104,20 @@ python app.py
 API will be available at http://localhost:5000
 ''')
 
-        return f"✅ Created Flask API project: {project_name}\n\nNext steps:\n  cd {project_name}\n  pip install -r requirements.txt\n  python app.py"
+        return f"✅ Created Flask API project: {project_path}\n\nNext steps:\n  cd {project_path}\n  pip install -r requirements.txt\n  python app.py"
 
     except Exception as e:
         return f"Error creating Flask API scaffold: {str(e)}"
 
 
 def _create_fastapi_scaffold(project_name: str) -> str:
-    """Helper to create FastAPI scaffold"""
+    """Helper to create FastAPI scaffold in C:/ drive"""
     try:
-        os.makedirs(project_name, exist_ok=True)
+        project_path = os.path.join("C:/", project_name)
+        os.makedirs(project_path, exist_ok=True)
 
         # main.py
-        with open(f"{project_name}/main.py", "w") as f:
+        with open(f"{project_path}/main.py", "w") as f:
             f.write(f'''"""
 {project_name} - FastAPI application
 """
@@ -1140,11 +1148,11 @@ async def create_item(item: Item):
 ''')
 
         # requirements.txt
-        with open(f"{project_name}/requirements.txt", "w") as f:
+        with open(f"{project_path}/requirements.txt", "w") as f:
             f.write('fastapi>=0.109.0\nuvicorn[standard]>=0.27.0\n')
 
         # README.md
-        with open(f"{project_name}/README.md", "w") as f:
+        with open(f"{project_path}/README.md", "w") as f:
             f.write(f'''# {project_name}
 
 FastAPI application created by BECA
@@ -1158,20 +1166,21 @@ uvicorn main:app --reload
 API docs: http://localhost:8000/docs
 ''')
 
-        return f"✅ Created FastAPI project: {project_name}\n\nNext steps:\n  cd {project_name}\n  pip install -r requirements.txt\n  uvicorn main:app --reload"
+        return f"✅ Created FastAPI project: {project_path}\n\nNext steps:\n  cd {project_path}\n  pip install -r requirements.txt\n  uvicorn main:app --reload"
 
     except Exception as e:
         return f"Error creating FastAPI scaffold: {str(e)}"
 
 
 def _create_python_cli_scaffold(project_name: str) -> str:
-    """Helper to create Python CLI scaffold"""
+    """Helper to create Python CLI scaffold in C:/ drive"""
     try:
-        os.makedirs(project_name, exist_ok=True)
-        os.makedirs(f"{project_name}/{project_name}", exist_ok=True)
+        project_path = os.path.join("C:/", project_name)
+        os.makedirs(project_path, exist_ok=True)
+        os.makedirs(f"{project_path}/{project_name}", exist_ok=True)
 
         # cli.py
-        with open(f"{project_name}/{project_name}/cli.py", "w") as f:
+        with open(f"{project_path}/{project_name}/cli.py", "w") as f:
             f.write(f'''"""
 {project_name} CLI
 """
@@ -1196,11 +1205,11 @@ if __name__ == '__main__':
 ''')
 
         # __init__.py
-        with open(f"{project_name}/{project_name}/__init__.py", "w") as f:
+        with open(f"{project_path}/{project_name}/__init__.py", "w") as f:
             f.write(f'"""\\n{project_name}\\n"""\n__version__ = "0.1.0"\n')
 
         # setup.py
-        with open(f"{project_name}/setup.py", "w") as f:
+        with open(f"{project_path}/setup.py", "w") as f:
             f.write(f'''from setuptools import setup, find_packages
 
 setup(
@@ -1215,7 +1224,7 @@ setup(
 )
 ''')
 
-        return f"✅ Created Python CLI project: {project_name}\n\nNext steps:\n  cd {project_name}\n  pip install -e .\n  {project_name} hello"
+        return f"✅ Created Python CLI project: {project_path}\n\nNext steps:\n  cd {project_path}\n  pip install -e .\n  {project_name} hello"
 
     except Exception as e:
         return f"Error creating Python CLI scaffold: {str(e)}"
@@ -1231,26 +1240,62 @@ except ImportError:
     MEMORY_AVAILABLE = False
     print("Warning: Memory tools not available")
 
+# Import knowledge enhancement tools
+try:
+    from knowledge_tools import KNOWLEDGE_TOOLS
+    KNOWLEDGE_AVAILABLE = True
+except ImportError:
+    KNOWLEDGE_TOOLS = []
+    KNOWLEDGE_AVAILABLE = False
+    print("Warning: Knowledge tools not available")
+
+# Import codebase exploration tools
+try:
+    from codebase_explorer import CODEBASE_TOOLS
+    CODEBASE_AVAILABLE = True
+except ImportError:
+    CODEBASE_TOOLS = []
+    CODEBASE_AVAILABLE = False
+    print("Warning: Codebase explorer tools not available")
+
+# Import AI model tools
+try:
+    from ai_model_tools import AI_MODEL_TOOLS
+    AI_MODEL_AVAILABLE = True
+except ImportError:
+    AI_MODEL_TOOLS = []
+    AI_MODEL_AVAILABLE = False
+    print("Warning: AI model tools not available")
+
 BECA_TOOLS = [
+    # Core file and project tools
     create_react_app,
     read_file,
     write_file,
     list_files,
+    create_project_from_template,
+
+    # Git tools
     git_status,
     git_diff,
     git_add,
     git_commit,
     git_push,
+
+    # Web and research tools
     web_search,
     fetch_url,
+
+    # Code execution and testing
     run_python,
     run_command,
+    run_tests,
+    generate_tests,
+    coverage_report,
+
+    # Code analysis tools
     find_in_files,
     analyze_code,
     find_bugs,
     suggest_improvements,
-    run_tests,
-    generate_tests,
-    coverage_report,
-    create_project_from_template,
-] + MEMORY_TOOLS  # Add memory tools if available
+] + MEMORY_TOOLS + KNOWLEDGE_TOOLS + CODEBASE_TOOLS + AI_MODEL_TOOLS
