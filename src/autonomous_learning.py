@@ -31,8 +31,59 @@ class AutonomousLearner:
         self.learned_count = 0
 
         # Curated learning curriculum - high-quality resources
+        # Based on 8-Phase comprehensive learning plan
         self.curriculum = [
-            # Python Essentials
+            # PHASE 1: Core Web Development Fundamentals
+            {
+                'url': 'https://developer.mozilla.org/en-US/docs/Web',
+                'category': 'web-fundamentals',
+                'priority': 0.95,
+                'tags': ['mdn', 'web', 'html', 'css', 'javascript', 'fundamentals']
+            },
+            {
+                'url': 'https://web.dev/learn/',
+                'category': 'web-fundamentals',
+                'priority': 0.9,
+                'tags': ['web-dev', 'performance', 'pwa', 'best-practices']
+            },
+            {
+                'url': 'https://javascript.info/',
+                'category': 'web-fundamentals',
+                'priority': 0.9,
+                'tags': ['javascript', 'modern-js', 'tutorial']
+            },
+            {
+                'url': 'https://css-tricks.com/',
+                'category': 'web-fundamentals',
+                'priority': 0.8,
+                'tags': ['css', 'techniques', 'patterns']
+            },
+
+            # PHASE 2: Python Mastery
+            {
+                'url': 'https://docs.python.org/3/',
+                'category': 'python',
+                'priority': 0.95,
+                'tags': ['python', 'official-docs', 'authoritative']
+            },
+            {
+                'url': 'https://realpython.com/',
+                'category': 'python',
+                'priority': 0.9,
+                'tags': ['python', 'tutorials', 'advanced']
+            },
+            {
+                'url': 'https://packaging.python.org/',
+                'category': 'python',
+                'priority': 0.85,
+                'tags': ['python', 'packaging', 'dependencies']
+            },
+            {
+                'url': 'https://peps.python.org/',
+                'category': 'python',
+                'priority': 0.8,
+                'tags': ['python', 'pep', 'language-features']
+            },
             {
                 'url': 'https://docs.python.org/3/library/asyncio.html',
                 'category': 'python',
@@ -42,83 +93,181 @@ class AutonomousLearner:
             {
                 'url': 'https://docs.python.org/3/library/typing.html',
                 'category': 'python',
-                'priority': 0.8,
+                'priority': 0.85,
                 'tags': ['python', 'typing', 'best-practices']
             },
 
-            # Web Frameworks
-            {
-                'url': 'https://fastapi.tiangolo.com/',
-                'category': 'web-framework',
-                'priority': 0.9,
-                'tags': ['fastapi', 'api', 'web']
-            },
-            {
-                'url': 'https://flask.palletsprojects.com/',
-                'category': 'web-framework',
-                'priority': 0.7,
-                'tags': ['flask', 'api', 'web']
-            },
-
-            # AI/ML Frameworks
+            # PHASE 3: AI/ML Infrastructure & Models
             {
                 'url': 'https://pytorch.org/docs/stable/index.html',
                 'category': 'ai-ml',
-                'priority': 0.9,
+                'priority': 0.95,
                 'tags': ['pytorch', 'ml', 'deep-learning']
+            },
+            {
+                'url': 'https://www.tensorflow.org/guide',
+                'category': 'ai-ml',
+                'priority': 0.9,
+                'tags': ['tensorflow', 'ml', 'google']
             },
             {
                 'url': 'https://huggingface.co/docs/transformers/index',
                 'category': 'ai-ml',
-                'priority': 0.95,
-                'tags': ['transformers', 'llm', 'nlp']
+                'priority': 0.98,
+                'tags': ['transformers', 'llm', 'nlp', 'huggingface']
             },
             {
                 'url': 'https://python.langchain.com/docs/get_started/introduction',
                 'category': 'ai-framework',
-                'priority': 0.9,
-                'tags': ['langchain', 'llm', 'agents']
+                'priority': 0.95,
+                'tags': ['langchain', 'llm', 'agents', 'rag']
             },
-
-            # AI Model Training
             {
                 'url': 'https://huggingface.co/docs/transformers/training',
                 'category': 'ai-training',
-                'priority': 0.95,
+                'priority': 0.98,
                 'tags': ['fine-tuning', 'training', 'ml']
             },
             {
                 'url': 'https://huggingface.co/docs/peft/index',
                 'category': 'ai-training',
-                'priority': 0.9,
+                'priority': 0.95,
                 'tags': ['lora', 'peft', 'fine-tuning']
             },
+            {
+                'url': 'https://fastapi.tiangolo.com/',
+                'category': 'web-framework',
+                'priority': 0.95,
+                'tags': ['fastapi', 'api', 'web', 'ai-services']
+            },
+            {
+                'url': 'https://docs.ray.io/en/latest/',
+                'category': 'ai-ml',
+                'priority': 0.85,
+                'tags': ['ray', 'distributed', 'mlops']
+            },
 
-            # JavaScript/Frontend
+            # PHASE 4: Templates & Boilerplates
+            {
+                'url': 'https://github.com/vercel/next.js/tree/canary/examples',
+                'category': 'templates',
+                'priority': 0.8,
+                'tags': ['nextjs', 'templates', 'examples']
+            },
+            {
+                'url': 'https://github.com/sindresorhus/awesome',
+                'category': 'templates',
+                'priority': 0.85,
+                'tags': ['awesome-lists', 'curated', 'resources']
+            },
+            {
+                'url': 'https://github.com/cookiecutter/cookiecutter',
+                'category': 'templates',
+                'priority': 0.8,
+                'tags': ['cookiecutter', 'project-templates', 'python']
+            },
+            {
+                'url': 'https://ui.shadcn.com/',
+                'category': 'templates',
+                'priority': 0.85,
+                'tags': ['shadcn', 'react', 'components']
+            },
+            {
+                'url': 'https://daisyui.com/',
+                'category': 'templates',
+                'priority': 0.8,
+                'tags': ['daisyui', 'tailwind', 'components']
+            },
+
+            # PHASE 5: Advanced Code Study (Production-Grade Codebases)
+            {
+                'url': 'https://docs.djangoproject.com/en/stable/',
+                'category': 'code-study',
+                'priority': 0.85,
+                'tags': ['django', 'architecture', 'patterns']
+            },
+            {
+                'url': 'https://flask.palletsprojects.com/',
+                'category': 'code-study',
+                'priority': 0.8,
+                'tags': ['flask', 'minimalist', 'design']
+            },
             {
                 'url': 'https://react.dev/learn',
-                'category': 'frontend',
-                'priority': 0.8,
-                'tags': ['react', 'frontend', 'javascript']
+                'category': 'code-study',
+                'priority': 0.85,
+                'tags': ['react', 'component-architecture', 'frontend']
             },
             {
-                'url': 'https://nodejs.org/docs/latest/api/',
-                'category': 'backend',
-                'priority': 0.7,
-                'tags': ['nodejs', 'javascript', 'backend']
+                'url': 'https://google.github.io/styleguide/',
+                'category': 'code-quality',
+                'priority': 0.9,
+                'tags': ['style-guide', 'best-practices', 'google']
+            },
+            {
+                'url': 'https://refactoring.guru/',
+                'category': 'code-quality',
+                'priority': 0.9,
+                'tags': ['design-patterns', 'refactoring', 'clean-code']
+            },
+            {
+                'url': 'https://patterns.dev/',
+                'category': 'code-quality',
+                'priority': 0.85,
+                'tags': ['patterns', 'web-apps', 'modern']
             },
 
-            # DevOps & Tools
+            # PHASE 6: Specialized AI Agent Development
+            {
+                'url': 'https://python.langchain.com/docs/modules/agents/',
+                'category': 'ai-agents',
+                'priority': 0.95,
+                'tags': ['langchain', 'agents', 'chains']
+            },
+            {
+                'url': 'https://github.com/guidance-ai/guidance',
+                'category': 'ai-agents',
+                'priority': 0.9,
+                'tags': ['guidance', 'llm-control', 'output-control']
+            },
+            {
+                'url': 'https://github.com/stanfordnlp/dspy',
+                'category': 'ai-agents',
+                'priority': 0.9,
+                'tags': ['dspy', 'foundation-models', 'programming']
+            },
+            {
+                'url': 'https://python.useinstructor.com/',
+                'category': 'ai-agents',
+                'priority': 0.85,
+                'tags': ['instructor', 'structured-outputs', 'llm']
+            },
+
+            # PHASE 7: Discovery & Tool Finding (Key Resources)
+            {
+                'url': 'https://github.com/trending',
+                'category': 'discovery',
+                'priority': 0.75,
+                'tags': ['github', 'trending', 'discovery']
+            },
+            {
+                'url': 'https://paperswithcode.com/',
+                'category': 'discovery',
+                'priority': 0.8,
+                'tags': ['papers', 'code', 'ml-research']
+            },
+
+            # DevOps & Infrastructure
             {
                 'url': 'https://docs.docker.com/get-started/',
                 'category': 'devops',
-                'priority': 0.8,
+                'priority': 0.85,
                 'tags': ['docker', 'containers', 'devops']
             },
             {
                 'url': 'https://git-scm.com/doc',
                 'category': 'version-control',
-                'priority': 0.7,
+                'priority': 0.8,
                 'tags': ['git', 'version-control']
             },
 
@@ -126,7 +275,7 @@ class AutonomousLearner:
             {
                 'url': 'https://docs.pytest.org/en/stable/',
                 'category': 'testing',
-                'priority': 0.8,
+                'priority': 0.85,
                 'tags': ['pytest', 'testing', 'python']
             },
 
@@ -134,30 +283,102 @@ class AutonomousLearner:
             {
                 'url': 'https://www.postgresql.org/docs/',
                 'category': 'database',
-                'priority': 0.7,
+                'priority': 0.75,
                 'tags': ['postgresql', 'database', 'sql']
+            },
+
+            # Backend Frameworks
+            {
+                'url': 'https://nodejs.org/docs/latest/api/',
+                'category': 'backend',
+                'priority': 0.75,
+                'tags': ['nodejs', 'javascript', 'backend']
             },
         ]
 
-        # GitHub repos to clone and analyze
+        # GitHub repos to clone and analyze (Phase 5 & 6)
         self.repos_to_learn = [
+            # Production-Grade Codebases
+            {
+                'url': 'https://github.com/django/django',
+                'name': 'Django',
+                'priority': 0.9,
+                'focus': 'Architecture patterns and best practices'
+            },
+            {
+                'url': 'https://github.com/pallets/flask',
+                'name': 'Flask',
+                'priority': 0.85,
+                'focus': 'Minimalist design philosophy'
+            },
             {
                 'url': 'https://github.com/tiangolo/fastapi',
                 'name': 'FastAPI',
-                'priority': 0.9,
-                'focus': 'Modern Python web framework architecture'
+                'priority': 0.95,
+                'focus': 'Modern async Python API patterns'
             },
             {
-                'url': 'https://github.com/langchain-ai/langchain',
-                'name': 'LangChain',
-                'priority': 0.95,
-                'focus': 'LLM application framework patterns'
+                'url': 'https://github.com/facebook/react',
+                'name': 'React',
+                'priority': 0.9,
+                'focus': 'Component architecture'
             },
             {
                 'url': 'https://github.com/huggingface/transformers',
                 'name': 'Transformers',
-                'priority': 0.9,
+                'priority': 0.95,
                 'focus': 'ML model implementation patterns'
+            },
+            # AI Agent Development
+            {
+                'url': 'https://github.com/langchain-ai/langchain',
+                'name': 'LangChain',
+                'priority': 0.98,
+                'focus': 'LLM application framework and agent patterns'
+            },
+            {
+                'url': 'https://github.com/Significant-Gravitas/AutoGPT',
+                'name': 'AutoGPT',
+                'priority': 0.9,
+                'focus': 'Autonomous agent patterns'
+            },
+            {
+                'url': 'https://github.com/guidance-ai/guidance',
+                'name': 'Guidance',
+                'priority': 0.85,
+                'focus': 'Controlling LLM output'
+            },
+            {
+                'url': 'https://github.com/stanfordnlp/dspy',
+                'name': 'DSPy',
+                'priority': 0.9,
+                'focus': 'Programming with foundation models'
+            },
+            {
+                'url': 'https://github.com/jxnl/instructor',
+                'name': 'Instructor',
+                'priority': 0.85,
+                'focus': 'Structured outputs from LLMs'
+            },
+            # Template Libraries
+            {
+                'url': 'https://github.com/vercel/next.js',
+                'name': 'Next.js',
+                'priority': 0.85,
+                'focus': 'React framework and patterns'
+            },
+            {
+                'url': 'https://github.com/cookiecutter/cookiecutter',
+                'name': 'Cookiecutter',
+                'priority': 0.8,
+                'focus': 'Project templating system'
+            },
+            # Algorithm & Pattern Study
+            {
+                'url': 'https://github.com/TheAlgorithms/Python',
+                'name': 'TheAlgorithms Python',
+                'priority': 0.85,
+                'focus': 'Algorithm implementations'
             },
         ]
 

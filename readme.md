@@ -7,7 +7,7 @@ BECA is an AI coding assistant powered by LangChain and Ollama, running on cloud
 See [START-BECA.md](START-BECA.md) for complete startup instructions.
 
 **TL;DR:**
-```powershell
+```bash
 # 1. Start cloud GPU
 gcloud compute instances start beca-ollama --zone=us-central1-c --project=beca-0001
 
@@ -34,14 +34,14 @@ cd C:\dev && .\.venv\Scripts\Activate.ps1 && python beca_gui.py
 ## Files
 
 - `START-BECA.md` - Complete startup guide
-- `create-vm.ps1` - Create cloud GPU VM
-- `setup-firewall.ps1` - Configure firewall
+- `create_vm.py` - Create cloud GPU VM
+- `setup_firewall.py` - Configure firewall
 - `beca_gui.py` - Launch the web interface
 - `src/` - Source code (agent, tools, memory)
 
 ## Cost Management
 
 Cloud GPU costs ~$0.30/hour. Always stop the VM when not in use:
-```powershell
+```bash
 gcloud compute instances stop beca-ollama --zone=us-central1-c --project=beca-0001
 ```

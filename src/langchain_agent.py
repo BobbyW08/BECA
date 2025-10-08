@@ -23,12 +23,15 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding='utf-8')
 
 # Ollama configuration
-OLLAMA_MODEL = "llama3.1:8b"  # Better for conversation + tool use
-OLLAMA_URL = "http://34.28.62.86:11434"
+OLLAMA_URL = "http://34.46.140.140:11434"  # New SPOT VM
 
-# Create the LLM with optimizations for speed
-llm = ChatOllama(
-    model=OLLAMA_MODEL,
+# Model definitions
+LLAMA_MODEL = "llama3.1:8b"  # Best for: conversation, reasoning, tool use, general tasks
+CODER_MODEL = "qwen2.5-coder:7b-instruct"  # Best for: code generation, debugging, code review
+
+# Create LLMs for both models
+llm_general = ChatOllama(
+    model=LLAMA_MODEL,
     base_url=OLLAMA_URL,
     temperature=0.3,
     num_predict=256,  # Shorter responses = faster
@@ -36,6 +39,19 @@ llm = ChatOllama(
     top_k=20,  # Speed optimization
     top_p=0.9,  # Speed optimization
 )
+
+llm_coder = ChatOllama(
+    model=CODER_MODEL,
+    base_url=OLLAMA_URL,
+    temperature=0.2,  # Lower temp for more precise code
+    num_predict=512,  # Longer responses for code
+    num_ctx=4096,  # Larger context for code understanding
+    top_k=20,
+    top_p=0.9,
+)
+
+# Default to general model for agent
+llm = llm_general
 
 # Create agent prompt - using tool calling format (works best with llama3.1)
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -114,17 +130,92 @@ agent_executor = AgentExecutor(
 )
 
 
-def chat_with_agent(message: str) -> str:
+def _should_use_coder_model(message: str) -> bool:
+    """
+    Determine if the coder model should be used based on the message content.
+
+    Use qwen2.5-coder for:
+    - Writing/generating code
+    - Debugging code
+    - Code review and analysis
+    - Explaining complex code
+    - Refactoring suggestions
+
+    Use llama3.1 for:
+    - General conversation
+    - Tool use and file operations
+    - Planning and reasoning
+    - Documentation writing
+    - General questions
+    """
+    message_lower = message.lower()
+
+    # Keywords that indicate code-focused tasks
+    code_keywords = [
+        'write code', 'generate code', 'create function', 'create class',
+        'write a function', 'write function', 'write a class', 'create a function',
+        'create a class', 'create an algorithm', 'write an algorithm',
+        'implement', 'code for', 'debug', 'fix this code', 'what\'s wrong with',
+        'refactor', 'optimize code', 'improve this code', 'code review',
+        'explain this code', 'how does this code', 'algorithm for',
+        'function that', 'class that', 'method that', 'write a',
+        'bug in', 'error in my code', 'syntax error', 'logic error',
+        'python function', 'javascript function', 'java class', 'c++ code'
+    ]
+
+    # Check if message contains code-related keywords
+    for keyword in code_keywords:
+        if keyword in message_lower:
+            return True
+
+    # Check if message contains code blocks (triple backticks or indented code)
+    if '```' in message or '\n    ' in message:
+        return True
+
+    return False
+
+
+def chat_with_agent(message: str, force_model: str = None) -> str:
     """
     Send a message to the BECA agent and get a response.
     Automatically saves conversation to memory database.
+    Intelligently selects between llama3.1 (general) and qwen2.5-coder (coding).
 
     Args:
         message: User's message
+        force_model: Optional. Force a specific model ("general" or "coder")
 
     Returns:
         Agent's response
     """
+    # Determine which model to use
+    use_coder = force_model == "coder" if force_model else _should_use_coder_model(message)
+
+    # Select the appropriate LLM and rebuild agent if needed
+    global agent_executor
+    if use_coder:
+        # Use coder model for code-focused tasks
+        coder_agent = create_tool_calling_agent(
+            llm=llm_coder,
+            tools=BECA_TOOLS,
+            prompt=agent_prompt,
+        )
+        active_executor = AgentExecutor(
+            agent=coder_agent,
+            tools=BECA_TOOLS,
+            verbose=True,
+            handle_parsing_errors=handle_parsing_error,
+            max_iterations=5,
+            max_execution_time=30,
+            return_intermediate_steps=True,
+            early_stopping_method="generate",
+        )
+        model_used = CODER_MODEL
+    else:
+        # Use general model for everything else
+        active_executor = agent_executor
+        model_used = LLAMA_MODEL
+
     # Inject user preferences into context if memory is enabled
     context_message = message
     if MEMORY_ENABLED and memory:
@@ -140,8 +231,12 @@ def chat_with_agent(message: str) -> str:
             pass  # Silently fail if preferences can't be loaded
 
     try:
-        response = agent_executor.invoke({"input": context_message})
+        response = active_executor.invoke({"input": context_message})
         agent_response = response.get("output", "Sorry, I couldn't generate a response.")
+
+        # Add model indicator to response (subtle, at the end)
+        model_indicator = f"\n\n_[Using {model_used}]_" if use_coder else ""
+        agent_response = agent_response + model_indicator
 
         # Save conversation to memory
         if MEMORY_ENABLED and memory:
