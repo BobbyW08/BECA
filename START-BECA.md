@@ -1,6 +1,24 @@
 # BECA Startup Instructions
 
-Complete guide to start BECA from your Windows laptop with cloud GPU.
+## TL;DR - Simple Steps
+
+```bash
+# 1. Start the VM
+gcloud compute instances start beca-ollama --zone=us-central1-b --project=beca-0001
+
+# 2. Wait 30 seconds, then activate Python environment
+cd C:\dev
+.\.venv\Scripts\Activate.ps1
+
+# 3. Launch BECA
+python beca_gui.py
+
+# 4. Open browser to http://127.0.0.1:7860
+```
+
+**Done!** BECA will open in your browser automatically.
+
+---
 
 ## Prerequisites (One-Time Setup)
 
@@ -12,7 +30,7 @@ Before starting BECA, ensure you have:
 
 ---
 
-## Quick Start (Every Time)
+## Detailed Steps (Every Time)
 
 ### 1. Start the Cloud GPU VM (if stopped)
 
@@ -46,7 +64,7 @@ If you get an error:
 
 Open PowerShell in VS Code or standalone:
 
-```powershell
+```bash
 # Navigate to project
 cd C:\dev
 
