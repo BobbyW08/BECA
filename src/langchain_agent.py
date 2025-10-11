@@ -2,6 +2,7 @@
 LangChain Agent for BECA using Ollama
 """
 import sys
+import subprocess
 from langchain_ollama import ChatOllama
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import PromptTemplate
@@ -22,8 +23,24 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
-# Ollama configuration
-OLLAMA_URL = "http://34.46.140.140:11434"  # New SPOT VM
+# Ollama configuration - Auto-detect VM IP (since it's preemptible and IP changes)
+def get_ollama_url():
+    """Get the current Ollama URL by fetching VM's external IP."""
+    try:
+        result = subprocess.run(
+            ["gcloud", "compute", "instances", "describe", "beca-ollama",
+             "--project=beca-0001", "--format=get(networkInterfaces[0].accessConfigs[0].natIP)"],
+            capture_output=True, text=True, timeout=5, check=True
+        )
+        ip = result.stdout.strip()
+        if ip:
+            return f"http://{ip}:11434"
+    except:
+        pass
+    # Fallback to last known IP
+    return "http://35.226.49.146:11434"
+
+OLLAMA_URL = get_ollama_url()
 
 # Model definitions
 LLAMA_MODEL = "llama3.1:8b"  # Best for: conversation, reasoning, tool use, general tasks
@@ -33,11 +50,11 @@ CODER_MODEL = "qwen2.5-coder:7b-instruct"  # Best for: code generation, debuggin
 llm_general = ChatOllama(
     model=LLAMA_MODEL,
     base_url=OLLAMA_URL,
-    temperature=0.3,
-    num_predict=256,  # Shorter responses = faster
-    num_ctx=2048,  # Smaller context window = faster
-    top_k=20,  # Speed optimization
-    top_p=0.9,  # Speed optimization
+    temperature=0.4,  # Slightly higher for more diverse responses
+    num_predict=512,  # Allow longer, more complete responses
+    num_ctx=4096,  # Larger context to understand complex queries better
+    top_k=40,  # More diversity in token selection
+    top_p=0.9,
 )
 
 llm_coder = ChatOllama(
@@ -59,17 +76,22 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 agent_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are BECA (Badass Expert Coding Agent), a self-improving AI coding assistant with advanced learning capabilities.
 
-IMPORTANT RULES:
-- For questions ABOUT coding/yourself/general topics: Answer directly, NO TOOLS
-- Use tools ONLY for actual tasks:
-  * File operations (read, write, list files)
-  * Git commands (commit, push, status)
-  * Running code/commands
-  * Web searches
-  * Creating projects
-  * Learning from documentation (NEW!)
-  * Analyzing codebases (NEW!)
-  * Working with AI models (NEW!)
+ABOUT YOU:
+- Your codebase is in C:\\dev and C:\\dev\\src
+- Your main files: beca_gui.py, langchain_agent.py, langchain_tools.py, knowledge_system.py, memory_db.py
+- Your knowledge is stored in: beca_knowledge.db and beca_memory.db
+- You run on Ollama with two models: llama3.1:8b (general) and qwen2.5-coder:7b-instruct (coding)
+
+BE PROACTIVE WITH YOUR OWN CODE:
+- When asked to review YOUR codebase → Use list_files("C:/dev") and list_files("C:/dev/src"), then read_file on key files
+- When asked about YOUR capabilities → Use list_files and read_file to check langchain_tools.py
+- When asked about YOUR architecture → Use read_file on langchain_agent.py and beca_gui.py
+- DON'T suggest clone_and_learn for your own code - you already have access! Just read the files directly.
+
+TOOL USAGE RULES:
+- Questions about YOUR code/capabilities → Use list_files + read_file immediately
+- General knowledge questions → Answer directly without tools
+- User tasks (read/write files, git, run code, search web, create projects) → Use appropriate tools
 
 PROJECT CREATION RULES:
 - When user wants to create a new project/app, ALWAYS ask them:
@@ -93,14 +115,23 @@ You can now actively improve your knowledge:
 
 When you encounter something new or useful, proactively save it to your knowledge base!
 
-Examples:
-- "What do you know about coding?" → Answer directly (no tools)
-- "Learn about FastAPI" → Use learn_from_documentation with FastAPI docs URL
-- "Create a new app" → Ask: "What type of project? (react-vite/flask-api/fastapi/python-cli) And what should I name it?"
-- "How do I fine-tune a model?" → Use fine_tune_guidance tool
-- "Analyze this GitHub repo" → Use clone_and_learn tool
+EXAMPLE INTERACTIONS:
+User: "What do you know about coding?"
+You: Answer directly (no tools)
 
-Be concise and helpful. Don't overuse tools. Use your learning capabilities to continuously improve!"""),
+User: "Review your own codebase and understand your capabilities"
+You: Use list_files("C:/dev"), list_files("C:/dev/src"), then read_file on langchain_tools.py to see all tools
+
+User: "What tools do you have?"
+You: Use read_file("C:/dev/src/langchain_tools.py") to check, then summarize
+
+User: "Create a new app"
+You: Ask: "What type of project? (react-vite/flask-api/fastapi/python-cli) And what should I name it?"
+
+User: "Learn about FastAPI"
+You: Use learn_from_documentation with FastAPI docs URL
+
+Be direct, proactive, and action-oriented. When asked about yourself, immediately use tools to check your own code!""""),
     ("human", "{input}"),
     MessagesPlaceholder(variable_name="agent_scratchpad"),
 ])
@@ -264,7 +295,7 @@ def chat_with_agent(message: str, force_model: str = None) -> str:
         return agent_response
 
     except Exception as e:
-        error_msg = f"Error: {str(e)}\n\nMake sure Ollama is running with the {OLLAMA_MODEL} model."
+        error_msg = f"Error: {str(e)}\n\nMake sure Ollama is running at {OLLAMA_URL} with models: {LLAMA_MODEL} or {CODER_MODEL}."
 
         # Save failed interaction to memory
         if MEMORY_ENABLED and memory:
@@ -284,7 +315,7 @@ def chat_with_agent(message: str, force_model: str = None) -> str:
 if __name__ == "__main__":
     # Test the agent
     print("BECA Agent initialized successfully!")
-    print(f"Using model: {OLLAMA_MODEL}")
+    print(f"Using models: {LLAMA_MODEL} (general) and {CODER_MODEL} (coding)")
     print(f"Available tools: {[tool.name for tool in BECA_TOOLS]}")
     print("\n" + "="*50 + "\n")
 

@@ -25,7 +25,8 @@ class KnowledgeBase:
 
     def _init_database(self):
         """Initialize the knowledge database with tables"""
-        self.conn = sqlite3.connect(self.db_path)
+        # Allow connection to be used across threads (for autonomous learning)
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         cursor = self.conn.cursor()
 
         # Documentation table
