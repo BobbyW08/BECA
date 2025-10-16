@@ -38,6 +38,7 @@ venv/
 env/
 ENV/
 .venv
+beca-env/
 
 # IDEs
 .vscode/
