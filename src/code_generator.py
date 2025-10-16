@@ -14,7 +14,17 @@ if sys.platform == "win32":
 # Qwen2.5-Coder configuration
 # Using 7B model since we have GPU resources
 QWEN_CODER_MODEL = "qwen2.5-coder:7b-instruct"
-OLLAMA_URL = "http://34.28.62.86:11434"
+# Use the same Ollama URL configuration as langchain_agent
+import os
+
+def get_ollama_url():
+    """Get Ollama URL with same priority as langchain_agent"""
+    env_url = os.getenv('OLLAMA_URL')
+    if env_url:
+        return env_url
+    return "http://localhost:11434"
+
+OLLAMA_URL = get_ollama_url()
 
 # Create the specialized code generation LLM
 code_llm = ChatOllama(

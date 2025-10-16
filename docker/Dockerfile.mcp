@@ -1,0 +1,36 @@
+# MCP Server Dockerfile
+# Model Context Protocol server for Claude integration with BECA tools
+
+FROM node:20-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create package.json for MCP server
+RUN npm init -y
+
+# Install MCP SDK and dependencies
+RUN npm install @modelcontextprotocol/sdk express body-parser axios cors
+
+# Create MCP server implementation
+COPY docker/mcp-server.js .
+
+# Expose MCP server port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV BECA_API_URL=http://beca-agent:7860
+
+# Run MCP server
+CMD ["node", "mcp-server.js"]

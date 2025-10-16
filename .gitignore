@@ -2,6 +2,19 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Exclude large reference directories
+cline-reference/
+google-cloud-sdk/
+beca/
+vscode-beca-extension/
+
+# Database files
+*.db
+beca_knowledge.db
+beca_memory.db
+api/beca_knowledge.db
+api/beca_memory.db
 *.so
 .Python
 build/

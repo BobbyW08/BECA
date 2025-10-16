@@ -47,8 +47,27 @@ except ImportError as e:
     print(f"Warning: Could not import autonomous learning: {e}")
     AUTONOMOUS_LEARNING_AVAILABLE = False
 
+# Import meta-learning system
+try:
+    from meta_learning_system import MetaLearningSystem
+    from meta_learning_dashboard import LearningDashboard
+    META_LEARNING_AVAILABLE = True
+    # Initialize meta-learning system
+    meta_learning = MetaLearningSystem("beca_memory.db")
+    meta_dashboard = LearningDashboard("beca_memory.db")
+except ImportError as e:
+    print(f"Warning: Could not import meta-learning system: {e}")
+    META_LEARNING_AVAILABLE = False
+    meta_learning = None
+    meta_dashboard = None
+
 # Global state for file operations
 current_file_content = {}  # Store original content for diffing
+
+# Global state for meta-learning
+meta_learning_enabled = True  # Auto-enabled by default
+current_session_id = None
+current_feature_tag = None
 
 
 def refresh_file_tree() -> str:
@@ -190,19 +209,60 @@ def get_learning_status() -> str:
             return "🧠 Auto-Learning: Initializing..."
     return "Auto-Learning: Not Available"
 
+# Function to get meta-learning status
+def get_meta_learning_status() -> str:
+    """Get meta-learning system status"""
+    if META_LEARNING_AVAILABLE and meta_learning_enabled:
+        try:
+            data = meta_dashboard.ml_system.get_learning_dashboard_data()
+            return f"📊 Meta-Learning ON | Features: {data['features_built']} | Lessons: {data['lessons_learned']}"
+        except:
+            return "📊 Meta-Learning: Active"
+    return "📊 Meta-Learning: OFF"
+
+# Function to toggle meta-learning
+def toggle_meta_learning(enabled: bool) -> str:
+    """Toggle meta-learning on/off"""
+    global meta_learning_enabled
+    meta_learning_enabled = enabled
+    if enabled:
+        return "📊 Meta-Learning: Enabled - BECA will learn from your work"
+    else:
+        return "📊 Meta-Learning: Disabled - Learning paused"
+
+# Function to view meta-learning dashboard
+def view_meta_dashboard() -> str:
+    """Generate and return meta-learning dashboard"""
+    if not META_LEARNING_AVAILABLE:
+        return "Meta-learning system not available"
+    try:
+        return meta_dashboard.generate_dashboard_report()
+    except Exception as e:
+        return f"Error generating dashboard: {str(e)}"
+
 # Create Enhanced Gradio interface with three panels
 with gr.Blocks(title="BECA - Your Autonomous Coding Agent", theme=gr.themes.Soft()) as demo:
     gr.Markdown("# 🤖 BECA - Badass Expert Coding Agent")
     gr.Markdown("Your personal AI coding assistant with visual file management & autonomous learning 🧠")
 
-    # Learning status bar
-    if AUTONOMOUS_LEARNING_AVAILABLE:
-        learning_status = gr.Textbox(
-            label="Autonomous Learning Status",
-            value=get_learning_status(),
-            interactive=False,
-            max_lines=1
-        )
+    # Learning status bars
+    with gr.Row():
+        if AUTONOMOUS_LEARNING_AVAILABLE:
+            learning_status = gr.Textbox(
+                label="Autonomous Learning Status",
+                value=get_learning_status(),
+                interactive=False,
+                max_lines=1,
+                scale=1
+            )
+        if META_LEARNING_AVAILABLE:
+            meta_status = gr.Textbox(
+                label="Meta-Learning Status",
+                value=get_meta_learning_status(),
+                interactive=False,
+                max_lines=1,
+                scale=1
+            )
 
     # Status bar
     status_bar = gr.Textbox(
@@ -278,6 +338,46 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent", theme=gr.themes.Soft
                         label="Diff"
                     )
 
+    # Meta-Learning Control Panel
+    if META_LEARNING_AVAILABLE:
+        with gr.Accordion("📊 Meta-Learning Dashboard", open=False):
+            gr.Markdown("### BECA learns from every feature you build!")
+            
+            meta_toggle = gr.Checkbox(
+                label="Enable Meta-Learning",
+                value=True,
+                info="When enabled, BECA learns from development interactions"
+            )
+            
+            meta_toggle_status = gr.Textbox(
+                label="Toggle Status",
+                value="📊 Meta-Learning: Enabled",
+                interactive=False,
+                max_lines=1
+            )
+            
+            with gr.Row():
+                refresh_dashboard_btn = gr.Button("🔄 Refresh Dashboard", size="sm")
+            
+            dashboard_display = gr.Code(
+                label="Learning Dashboard",
+                language="markdown",
+                value="Click 'Refresh Dashboard' to view learning progress",
+                lines=20
+            )
+            
+            meta_toggle.change(
+                toggle_meta_learning,
+                [meta_toggle],
+                [meta_toggle_status]
+            )
+            
+            refresh_dashboard_btn.click(
+                view_meta_dashboard,
+                None,
+                dashboard_display
+            )
+
     # Examples section
     with gr.Accordion("💡 Examples & Help", open=False):
         gr.Markdown("### Quick Start Examples:")
@@ -293,14 +393,16 @@ with gr.Blocks(title="BECA - Your Autonomous Coding Agent", theme=gr.themes.Soft
         )
 
         gr.Markdown("""
-        ### 🎯 New Visual Features
+        ### 🎯 Visual Features
         - **File Tree**: See your project structure in the left panel
         - **Code Viewer**: View files with syntax highlighting (right panel)
         - **Diff Viewer**: Compare before/after changes
         - **Real-time Updates**: File tree refreshes after BECA makes changes
 
-        ### 🧠 Memory Features
-        BECA remembers conversations, preferences, and successful patterns!
+        ### 🧠 Learning Features
+        - **Memory**: BECA remembers conversations, preferences, and patterns
+        - **Meta-Learning**: Learns from every feature built (toggle on/off above)
+        - **Auto-Learning**: Continuously learns from documentation and code
         """)
 
     # Event handlers for chat
@@ -369,9 +471,25 @@ if __name__ == "__main__":
         print("   ✅ Autonomous learning activated!")
     else:
         print("\n⚠️  Autonomous learning not available")
+    
+    # Initialize meta-learning system
+    if META_LEARNING_AVAILABLE:
+        print("\n📊 Meta-Learning System Ready")
+        print("   BECA will learn from your development work")
+        print("   - Logs every interaction during feature development")
+        print("   - Extracts patterns and lessons automatically")
+        print("   - Applies past learnings to new features")
+        print("   - Toggle on/off in GUI if needed")
+        print("   ✅ Meta-learning enabled by default!")
+    else:
+        print("\n⚠️  Meta-learning system not available")
 
+    # Get port from environment variable or default to 7860
+    port = int(os.getenv("GRADIO_SERVER_PORT", "7860"))
+    server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
+    
     print("\n" + "=" * 60)
-    print("🌐 Launching BECA GUI on http://127.0.0.1:7862")
+    print(f"🌐 Launching BECA GUI on http://{server_name}:{port}")
     print("=" * 60 + "\n")
 
-    demo.launch(server_name="127.0.0.1", server_port=7862, share=False)
+    demo.launch(server_name=server_name, server_port=port, share=False)

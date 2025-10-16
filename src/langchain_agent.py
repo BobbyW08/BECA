@@ -4,7 +4,7 @@ LangChain Agent for BECA using Ollama
 import sys
 import subprocess
 from langchain_ollama import ChatOllama
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.prompts import PromptTemplate
 from langchain_tools import BECA_TOOLS
 
@@ -23,9 +23,24 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
-# Ollama configuration - Auto-detect VM IP (since it's preemptible and IP changes)
+# Ollama configuration - Make it configurable via environment variable
 def get_ollama_url():
-    """Get the current Ollama URL by fetching VM's external IP."""
+    """
+    Get Ollama URL from environment variable or use sensible defaults.
+    
+    Priority:
+    1. OLLAMA_URL environment variable (if set)
+    2. Try to auto-detect VM IP (if gcloud is available)
+    3. Default to localhost (most common setup)
+    """
+    import os
+    
+    # Check environment variable first
+    env_url = os.getenv('OLLAMA_URL')
+    if env_url:
+        return env_url
+    
+    # Try to auto-detect VM IP (for cloud deployments)
     try:
         result = subprocess.run(
             ["gcloud", "compute", "instances", "describe", "beca-ollama",
@@ -37,8 +52,9 @@ def get_ollama_url():
             return f"http://{ip}:11434"
     except:
         pass
-    # Fallback to last known IP
-    return "http://35.226.49.146:11434"
+    
+    # Default to localhost (most common setup)
+    return "http://localhost:11434"
 
 OLLAMA_URL = get_ollama_url()
 
@@ -50,19 +66,19 @@ CODER_MODEL = "qwen2.5-coder:7b-instruct"  # Best for: code generation, debuggin
 llm_general = ChatOllama(
     model=LLAMA_MODEL,
     base_url=OLLAMA_URL,
-    temperature=0.4,  # Slightly higher for more diverse responses
-    num_predict=512,  # Allow longer, more complete responses
-    num_ctx=4096,  # Larger context to understand complex queries better
-    top_k=40,  # More diversity in token selection
+    temperature=0.4,
+    num_predict=512,
+    num_ctx=4096,
+    top_k=40,
     top_p=0.9,
 )
 
 llm_coder = ChatOllama(
     model=CODER_MODEL,
     base_url=OLLAMA_URL,
-    temperature=0.2,  # Lower temp for more precise code
-    num_predict=512,  # Longer responses for code
-    num_ctx=4096,  # Larger context for code understanding
+    temperature=0.2,
+    num_predict=512,
+    num_ctx=4096,
     top_k=20,
     top_p=0.9,
 )
@@ -70,11 +86,10 @@ llm_coder = ChatOllama(
 # Default to general model for agent
 llm = llm_general
 
-# Create agent prompt - using tool calling format (works best with llama3.1)
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+# Create agent prompt - using ReAct format (better compatibility with Ollama)
+from langchain_core.prompts import PromptTemplate
 
-agent_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are BECA (Badass Expert Coding Agent), a self-improving AI coding assistant with advanced learning capabilities.
+react_prompt_template = """You are BECA (Badass Expert Coding Agent), a self-improving AI coding assistant with advanced learning capabilities.
 
 ABOUT YOU:
 - Your codebase is in C:\\dev and C:\\dev\\src
@@ -82,62 +97,46 @@ ABOUT YOU:
 - Your knowledge is stored in: beca_knowledge.db and beca_memory.db
 - You run on Ollama with two models: llama3.1:8b (general) and qwen2.5-coder:7b-instruct (coding)
 
-BE PROACTIVE WITH YOUR OWN CODE:
-- When asked to review YOUR codebase → Use list_files("C:/dev") and list_files("C:/dev/src"), then read_file on key files
-- When asked about YOUR capabilities → Use list_files and read_file to check langchain_tools.py
-- When asked about YOUR architecture → Use read_file on langchain_agent.py and beca_gui.py
-- DON'T suggest clone_and_learn for your own code - you already have access! Just read the files directly.
+TOOL USAGE - CRITICAL INSTRUCTIONS:
+You have access to the following tools:
 
-TOOL USAGE RULES:
-- Questions about YOUR code/capabilities → Use list_files + read_file immediately
-- General knowledge questions → Answer directly without tools
-- User tasks (read/write files, git, run code, search web, create projects) → Use appropriate tools
+{tools}
 
-PROJECT CREATION RULES:
-- When user wants to create a new project/app, ALWAYS ask them:
-  1. What type of project they want (react-vite, flask-api, fastapi, python-cli, etc.)
-  2. What name they want for the project
-- DO NOT assume they want React. Present all available options.
-- ALL projects will be created in C:/ drive automatically.
-- Available templates: react-vite, flask-api, fastapi, python-cli
+Use the following format EXACTLY:
 
-SELF-IMPROVEMENT CAPABILITIES:
-You can now actively improve your knowledge:
-- learn_from_documentation: Scrape and index documentation for future reference
-- save_code_pattern: Save useful code patterns you discover
-- search_knowledge: Search your knowledge base for previous learnings
-- add_learning_resource: Queue up tutorials/docs to study later
-- analyze_repository: Learn from existing codebases
-- clone_and_learn: Clone GitHub repos and extract insights
-- learn_ai_model_knowledge: Build expertise in AI/ML models
-- explore_ollama_models: Discover available AI models
-- create_modelfile: Create custom AI models with specific behaviors
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action (can be a JSON string for complex inputs)
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
 
-When you encounter something new or useful, proactively save it to your knowledge base!
+IMPORTANT RULES:
+- When asked about YOUR code/capabilities, immediately use list_files or read_file tools
+- When user wants to create a project, ask for project type and name first
+- After each Action, WAIT for the Observation before continuing
+- Only provide a Final Answer after you have used tools and received Observations
+- DO NOT return raw JSON - always execute the Action and wait for Observation
 
-EXAMPLE INTERACTIONS:
-User: "What do you know about coding?"
-You: Answer directly (no tools)
+Begin!
 
-User: "Review your own codebase and understand your capabilities"
-You: Use list_files("C:/dev"), list_files("C:/dev/src"), then read_file on langchain_tools.py to see all tools
+Question: {input}
+Thought: {agent_scratchpad}"""
 
-User: "What tools do you have?"
-You: Use read_file("C:/dev/src/langchain_tools.py") to check, then summarize
+agent_prompt = PromptTemplate(
+    template=react_prompt_template,
+    input_variables=["input", "agent_scratchpad"],
+    partial_variables={
+        "tools": "\n".join([f"{tool.name}: {tool.description}" for tool in BECA_TOOLS]),
+        "tool_names": ", ".join([tool.name for tool in BECA_TOOLS])
+    }
+)
 
-User: "Create a new app"
-You: Ask: "What type of project? (react-vite/flask-api/fastapi/python-cli) And what should I name it?"
 
-User: "Learn about FastAPI"
-You: Use learn_from_documentation with FastAPI docs URL
-
-Be direct, proactive, and action-oriented. When asked about yourself, immediately use tools to check your own code!""""),
-    ("human", "{input}"),
-    MessagesPlaceholder(variable_name="agent_scratchpad"),
-])
-
-# Create the agent using tool calling (better for llama3.1)
-agent = create_tool_calling_agent(
+# Create the ReAct agent
+agent = create_react_agent(
     llm=llm,
     tools=BECA_TOOLS,
     prompt=agent_prompt,
@@ -148,16 +147,16 @@ def handle_parsing_error(error) -> str:
     """Handle parsing errors by providing guidance"""
     return "I encountered a formatting issue. Let me provide a clear response based on what I've done so far."
 
-# Create the agent executor
+# Create the agent executor with more aggressive tool execution
 agent_executor = AgentExecutor(
     agent=agent,
     tools=BECA_TOOLS,
     verbose=True,  # Show thinking process
     handle_parsing_errors=handle_parsing_error,
-    max_iterations=5,  # Further reduced to force faster conclusions
-    max_execution_time=30,  # Shorter timeout
+    max_iterations=10,  # Increased to allow tool execution + response
+    max_execution_time=60,  # Increased timeout for tool execution
     return_intermediate_steps=True,  # Return steps for debugging
-    early_stopping_method="generate",  # Generate response on max iterations
+    early_stopping_method="force",  # Force tool execution before stopping
 )
 
 
@@ -226,7 +225,7 @@ def chat_with_agent(message: str, force_model: str = None) -> str:
     global agent_executor
     if use_coder:
         # Use coder model for code-focused tasks
-        coder_agent = create_tool_calling_agent(
+        coder_agent = create_react_agent(
             llm=llm_coder,
             tools=BECA_TOOLS,
             prompt=agent_prompt,
@@ -236,10 +235,10 @@ def chat_with_agent(message: str, force_model: str = None) -> str:
             tools=BECA_TOOLS,
             verbose=True,
             handle_parsing_errors=handle_parsing_error,
-            max_iterations=5,
-            max_execution_time=30,
+            max_iterations=10,
+            max_execution_time=60,
             return_intermediate_steps=True,
-            early_stopping_method="generate",
+            early_stopping_method="force",
         )
         model_used = CODER_MODEL
     else:

@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # BECA Agent - Main Python/Gradio application
+  # ============================================
+  beca-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.beca
+    container_name: beca-agent
+    hostname: beca-agent
+    restart: unless-stopped
+    ports:
+      - "7860:7860"  # Gradio GUI
+    volumes:
+      # Persistent data storage
+      - beca-memory:/app/data
+      - beca-workspace:/app/workspace
+    environment:
+      - OLLAMA_URL=http://ollama-gpu:11434
+      - PYTHONUNBUFFERED=1
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+    networks:
+      - beca-network
+    depends_on:
+      - ollama-gpu
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # Ollama with GPU - LLM inference engine
+  # ============================================
+  ollama-gpu:
+    image: ollama/ollama:latest
+    container_name: ollama-gpu
+    hostname: ollama-gpu
+    restart: unless-stopped
+    ports:
+      - "11434:11434"  # Ollama API
+    volumes:
+      - ollama-models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    networks:
+      - beca-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================
+  # MCP Server - Claude integration
+  # ============================================
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mcp
+    container_name: mcp-server
+    hostname: mcp-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # MCP API
+    environment:
+      - PORT=8080
+      - BECA_API_URL=http://beca-agent:7860
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:-beca-default-token}
+      - NODE_ENV=production
+    networks:
+      - beca-network
+    depends_on:
+      - beca-agent
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ============================================
+  # Portainer - Docker management GUI
+  # ============================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    hostname: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"  # Web UI
+      - "9443:9443"  # HTTPS
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - beca-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # Nginx Reverse Proxy (Optional - for SSL)
+  # ============================================
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    hostname: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"    # HTTP
+      - "443:443"  # HTTPS
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    networks:
+      - beca-network
+    depends_on:
+      - beca-agent
+      - mcp-server
+      - portainer
+    profiles:
+      - production  # Only start with --profile production
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  beca-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ============================================
+# Volumes - Persistent storage
+# ============================================
+volumes:
+  # BECA data
+  beca-memory:
+    driver: local
+  beca-workspace:
+    driver: local
+  
+  # Ollama models (large, ~10GB+)
+  ollama-models:
+    driver: local
+  
+  # Portainer data
+  portainer-data:
+    driver: local
+  
+  # Nginx cache
+  nginx-cache:
+    driver: local

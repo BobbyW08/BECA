@@ -1,0 +1,88 @@
+.diff-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e1e;
+}
+
+.diff-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #252526;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.changes-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.changes-badge.modified {
+  background: #ce9178;
+  color: #1e1e1e;
+}
+
+.changes-badge.unchanged {
+  background: #858585;
+  color: #ffffff;
+}
+
+.diff-viewer-content {
+  flex: 1;
+  overflow: auto;
+  background: #1e1e1e;
+  padding: 1rem;
+}
+
+.diff-content {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.8125rem;
+  color: #cccccc;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.diff-viewer.empty,
+.diff-viewer.loading,
+.diff-viewer.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diff-viewer.empty .empty-state {
+  text-align: center;
+  color: #858585;
+  padding: 2rem;
+}
+
+.diff-viewer.empty .empty-state p:first-child {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.diff-viewer.empty .empty-state p {
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
+
+.diff-viewer.empty .empty-state .hint {
+  font-size: 0.75rem;
+  color: #6c6c6c;
+  margin-top: 1rem;
+}
+
+.diff-viewer.loading p {
+  color: #858585;
+}
+
+.diff-viewer.error p {
+  color: #f48771;
+  padding: 2rem;
+}

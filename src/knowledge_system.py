@@ -16,18 +16,29 @@ class KnowledgeBase:
     """
     Manages BECA's knowledge storage and retrieval
     Uses SQLite for efficient storage and querying
+    Thread-safe implementation using connection pooling
     """
 
     def __init__(self, db_path: str = "beca_knowledge.db"):
         self.db_path = db_path
-        self.conn = None
         self._init_database()
+
+    def _get_connection(self):
+        """Get a thread-local database connection"""
+        import threading
+        if not hasattr(self._local, 'conn') or self._local.conn is None:
+            self._local.conn = sqlite3.connect(self.db_path)
+        return self._local.conn
 
     def _init_database(self):
         """Initialize the knowledge database with tables"""
-        # Allow connection to be used across threads (for autonomous learning)
-        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
-        cursor = self.conn.cursor()
+        # Use thread-local storage for connections
+        import threading
+        self._local = threading.local()
+        
+        # Create tables using a temporary connection
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
 
         # Documentation table
         cursor.execute("""
@@ -132,12 +143,14 @@ class KnowledgeBase:
             )
         """)
 
-        self.conn.commit()
+        conn.commit()
+        conn.close()
 
     def add_documentation(self, source: str, url: str, title: str, content: str,
                          category: str = None, tags: List[str] = None) -> int:
         """Add documentation to knowledge base"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
         tags_str = json.dumps(tags) if tags else None
 
         cursor.execute("""
@@ -145,14 +158,15 @@ class KnowledgeBase:
             VALUES (?, ?, ?, ?, ?, ?)
         """, (source, url, title, content, category, tags_str))
 
-        self.conn.commit()
+        conn.commit()
         return cursor.lastrowid
 
     def add_code_pattern(self, pattern_name: str, language: str, code_snippet: str,
                         description: str = None, use_case: str = None,
                         tags: List[str] = None, source_url: str = None) -> int:
         """Add a code pattern to knowledge base"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
         tags_str = json.dumps(tags) if tags else None
 
         cursor.execute("""
@@ -161,14 +175,15 @@ class KnowledgeBase:
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (pattern_name, language, description, code_snippet, use_case, tags_str, source_url))
 
-        self.conn.commit()
+        conn.commit()
         return cursor.lastrowid
 
     def add_learning_resource(self, resource_type: str, title: str, url: str,
                              description: str = None, topics: List[str] = None,
                              difficulty_level: str = 'intermediate', priority: float = 0.5) -> int:
         """Add a learning resource to study queue"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
         topics_str = json.dumps(topics) if topics else None
 
         cursor.execute("""
@@ -177,14 +192,15 @@ class KnowledgeBase:
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (resource_type, title, url, description, topics_str, difficulty_level, priority))
 
-        self.conn.commit()
+        conn.commit()
         return cursor.lastrowid
 
     def add_tool_knowledge(self, tool_name: str, category: str, description: str,
                           installation: str = None, usage_examples: str = None,
                           official_docs_url: str = None) -> int:
         """Add knowledge about a development tool"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
 
         cursor.execute("""
             INSERT INTO tool_knowledge (tool_name, category, description, installation,
@@ -192,7 +208,7 @@ class KnowledgeBase:
             VALUES (?, ?, ?, ?, ?, ?)
         """, (tool_name, category, description, installation, usage_examples, official_docs_url))
 
-        self.conn.commit()
+        conn.commit()
         return cursor.lastrowid
 
     def add_ai_model_knowledge(self, model_name: str, model_type: str, framework: str,
@@ -200,7 +216,8 @@ class KnowledgeBase:
                               fine_tuning_methods: str = None, use_cases: str = None,
                               code_examples: str = None, source_url: str = None) -> int:
         """Add knowledge about AI/ML models"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
 
         cursor.execute("""
             INSERT INTO ai_model_knowledge (model_name, model_type, framework, description,
@@ -210,12 +227,13 @@ class KnowledgeBase:
         """, (model_name, model_type, framework, description, training_approach,
               fine_tuning_methods, use_cases, code_examples, source_url))
 
-        self.conn.commit()
+        conn.commit()
         return cursor.lastrowid
 
     def search_knowledge(self, query: str, category: str = None, limit: int = 10) -> List[Dict]:
         """Search across all knowledge with relevance scoring"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
 
         results = []
 
@@ -286,7 +304,8 @@ class KnowledgeBase:
 
     def get_learning_queue(self, limit: int = 10, status: str = 'pending') -> List[Dict]:
         """Get prioritized learning resources"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
 
         cursor.execute("""
             SELECT id, resource_type, title, url, description, topics, difficulty_level, priority
@@ -313,17 +332,19 @@ class KnowledgeBase:
 
     def mark_resource_learned(self, resource_id: int):
         """Mark a learning resource as completed"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
         cursor.execute("""
             UPDATE learning_resources
             SET status = 'completed', completed_at = CURRENT_TIMESTAMP
             WHERE id = ?
         """, (resource_id,))
-        self.conn.commit()
+        conn.commit()
 
     def update_pattern_usage(self, pattern_id: int, success: bool):
         """Track code pattern usage and success rate"""
-        cursor = self.conn.cursor()
+        conn = self._get_connection()
+        cursor = conn.cursor()
 
         # Get current stats
         cursor.execute("""
@@ -345,12 +366,13 @@ class KnowledgeBase:
                 WHERE id = ?
             """, (new_times_used, new_success_rate, pattern_id))
 
-            self.conn.commit()
+            conn.commit()
 
     def close(self):
-        """Close database connection"""
-        if self.conn:
-            self.conn.close()
+        """Close database connection for current thread"""
+        if hasattr(self._local, 'conn') and self._local.conn:
+            self._local.conn.close()
+            self._local.conn = None
 
 
 class WebDocScraper:

@@ -1,0 +1,71 @@
+.plan-act-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #2d2d30;
+  padding: 0.25rem;
+  border-radius: 6px;
+  border: 1px solid #3e3e42;
+}
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: #858585;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 4px;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 2;
+}
+
+.toggle-button:hover {
+  color: #cccccc;
+}
+
+.toggle-button.active {
+  color: #ffffff;
+  background: #007acc;
+}
+
+.mode-icon {
+  font-size: 1rem;
+}
+
+.mode-label {
+  font-weight: 600;
+}
+
+.toggle-slider {
+  display: none; /* Hidden for now, can add animated slider later */
+}
+
+/* Tooltip-style descriptions */
+.toggle-button::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #252526;
+  color: #cccccc;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  border: 1px solid #3e3e42;
+  z-index: 1000;
+}
+
+.toggle-button:hover::after {
+  opacity: 1;
+}
