@@ -1,0 +1,50 @@
+# BECA - Optimized Dependencies
+# Last updated: 2025-10-16
+# Only includes packages actually used by BECA
+
+# === CORE AI & AGENT FRAMEWORK ===
+langchain==0.3.27
+langchain-community==0.3.31
+langchain-core==0.3.79
+langchain-ollama==0.3.10
+langchain-text-splitters==0.3.11
+langsmith==0.4.37
+ollama==0.6.0
+
+# === WEB UI (GRADIO) ===
+gradio==5.49.1
+# gradio-client is installed automatically with gradio
+
+# === CODE VIEWER ENHANCEMENTS ===
+pygments==2.19.2  # Syntax highlighting
+watchdog==6.0.0   # File system monitoring
+
+# === GOOGLE DRIVE INTEGRATION ===
+# Allows BECA to read/write Google Drive files (PDFs, Docs, Sheets, etc.)
+google-api-python-client==2.184.0
+google-auth==2.41.1
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.2
+
+# === DATABASE & MEMORY ===
+# For BECA's memory and knowledge systems
+# Note: SQLAlchemy is installed automatically with langchain
+
+# === CORE UTILITIES ===
+requests==2.32.5      # Web search and HTTP requests
+pydantic==2.11.10     # Data validation
+jinja2==3.1.6         # Template rendering
+aiohttp==3.13.0       # Async HTTP for autonomous learning
+
+# === OPTIONAL: Async File Operations ===
+# Uncomment if needed for advanced async features
+# aiofiles==24.1.0
+
+# ============================================
+# REMOVED (Not needed with Google Drive integration):
+# - PyPDF2, python-docx, pillow (Google Drive handles these)
+# - pandas, numpy, openpyxl, tabulate (Google Drive handles Excel/CSV)
+# - audioop-lts, pydub (not used by BECA)
+# 
+# Total reduction: ~9 packages, ~80MB savings
+# ============================================

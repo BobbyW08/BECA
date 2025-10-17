@@ -1,4 +1,4 @@
- @echo off
+@echo off
 echo.
 echo ==========================================
 echo Starting BECA VM...
@@ -22,15 +22,14 @@ echo ==========================================
 echo Opening BECA in your browser...
 echo ==========================================
 echo.
-start http://%BECA_IP%:3000
+start http://%BECA_IP%:7860
 echo.
-echo Browser should be opening to: http://%BECA_IP%:3000
+echo Browser should be opening to: http://%BECA_IP%:7860
 echo If it doesn't open automatically, copy and paste the URL above.
 echo.
-echo BECA Frontend (React): http://%BECA_IP%:3000
-echo BECA Backend (API):    http://%BECA_IP%:8000/docs
-echo Portainer:             http://%BECA_IP%:9000
-echo MCP Server:            http://%BECA_IP%:8080
+echo BECA GUI: http://%BECA_IP%:7860
+echo Portainer: http://%BECA_IP%:9000
+echo MCP Server: http://%BECA_IP%:8080
 echo.
 echo Press any key to close this window...
 pause >nul

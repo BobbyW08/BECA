@@ -2,36 +2,61 @@ version: '3.8'
 
 services:
   # ============================================
-  # BECA Agent - Main Python/Gradio application
+  # BECA Backend - FastAPI application with Plan/Act modes
   # ============================================
-  beca-agent:
+  beca-backend:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.beca
-    container_name: beca-agent
-    hostname: beca-agent
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: beca-backend
+    hostname: beca-backend
     restart: unless-stopped
     ports:
-      - "7860:7860"  # Gradio GUI
+      - "8000:8000"  # FastAPI Backend
     volumes:
       # Persistent data storage
+      - ../src:/app/src
       - beca-memory:/app/data
       - beca-workspace:/app/workspace
     environment:
       - OLLAMA_URL=http://ollama-gpu:11434
       - PYTHONUNBUFFERED=1
-      - GRADIO_SERVER_NAME=0.0.0.0
-      - GRADIO_SERVER_PORT=7860
+      - API_PORT=8000
     networks:
       - beca-network
     depends_on:
       - ollama-gpu
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # ============================================
+  # BECA Frontend - React application with Plan/Act UI
+  # ============================================
+  beca-frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: beca-frontend
+    hostname: beca-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"  # React Frontend (nginx serves on 80 internally)
+    environment:
+      - REACT_APP_API_URL=http://beca-backend:8000
+    networks:
+      - beca-network
+    depends_on:
+      - beca-backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # ============================================
   # Ollama with GPU - LLM inference engine
@@ -77,13 +102,13 @@ services:
       - "8080:8080"  # MCP API
     environment:
       - PORT=8080
-      - BECA_API_URL=http://beca-agent:7860
+      - BECA_API_URL=http://beca-backend:8000
       - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:-beca-default-token}
       - NODE_ENV=production
     networks:
       - beca-network
     depends_on:
-      - beca-agent
+      - beca-backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -131,7 +156,8 @@ services:
     networks:
       - beca-network
     depends_on:
-      - beca-agent
+      - beca-frontend
+      - beca-backend
       - mcp-server
       - portainer
     profiles:

@@ -4,16 +4,20 @@ BECA is a self-improving AI coding assistant powered by LangChain and Ollama, ru
 
 ## Quick Start
 
-See [START-BECA.md](START-BECA.md) for complete startup instructions.
+See **[START-BECA.md](START-BECA.md)** for complete Docker/cloud setup instructions.
 
 **TL;DR:**
-```bash
-# 1. Start cloud GPU
-gcloud compute instances start beca-ollama --zone=us-central1-b --project=beca-0001
+```batch
+# 1. Double-click start-beca.bat (or start VM from Google Cloud Console)
+start-beca.bat
 
-# 2. Launch BECA
-cd C:\dev && .\.venv\Scripts\Activate.ps1 && python beca_gui.py
+# 2. Wait 60 seconds for containers to start
+
+# 3. Open browser
+http://34.55.204.139:7860
 ```
+
+**✨ Docker Setup:** BECA runs in cloud containers - no local Python setup needed!
 
 ---
 
