@@ -14,7 +14,7 @@ start-beca.bat
 # 2. Wait 60 seconds for containers to start
 
 # 3. Open browser
-http://34.55.204.139:7860
+http://34.55.204.139:3000
 ```
 
 **✨ Docker Setup:** BECA runs in cloud containers - no local Python setup needed!
@@ -53,15 +53,17 @@ BECA is an autonomous AI coding agent that:
 - **Multi-Model Architecture** - Dual LLMs for optimal performance (general + coding specialist)
 - **Cloud GPU Power** - Google Cloud T4 GPU for fast inference (SPOT pricing ~$0.17/hr)
 - **Local-First** - No API keys needed, runs on your infrastructure
-- **Visual Interface** - Gradio GUI with file tree, code viewer, and diff visualization
+- **Visual Interface** - Modern React frontend with Plan/Act modes, file tree, code viewer, and diff visualization
 
 ---
 
 ## Architecture
 
+**Note:** The architecture diagrams below document the historical Gradio-based implementation. BECA now uses a modern **React frontend** (port 3000) and **FastAPI backend** (port 8000) in a Docker multi-container setup. See [START-BECA.md](START-BECA.md) for current architecture details.
+
 BECA uses a modular, layered architecture designed for extensibility and autonomous improvement.
 
-### System Architecture Diagram
+### System Architecture Diagram (Historical - Gradio)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
