@@ -14,9 +14,14 @@ Your BECA AI agent is now successfully deployed on Google Cloud with Docker!
 
 ## 🌐 Access Your Services
 
-### BECA AI Agent (Gradio GUI)
-- **URL:** http://34.55.204.139:7860
-- **Purpose:** Main BECA interface for AI-powered development
+### BECA Frontend (React UI)
+- **URL:** http://34.55.204.139:3000
+- **Purpose:** Modern web interface for BECA
+- **Features:** Plan/Act modes, file tree, code viewer, diff viewer
+
+### BECA Backend (FastAPI)
+- **URL:** http://34.55.204.139:8000
+- **Purpose:** RESTful API with AI agent logic
 - **Features:** 39+ tools, autonomous learning, code generation
 
 ### Portainer (Docker Management)
@@ -50,7 +55,8 @@ echo Waiting 60 seconds for Docker containers to start...
 timeout /t 60 /nobreak
 echo.
 echo BECA is ready!
-echo Access at: http://34.55.204.139:7860
+echo Frontend: http://34.55.204.139:3000
+echo Backend:  http://34.55.204.139:8000/docs
 pause
 ```
 
@@ -116,7 +122,7 @@ Once VM is running:
 ### Starting Work on BECA
 1. **Double-click `start-beca.bat`** (or start VM from Google Cloud Console on iPad)
 2. Wait 60 seconds for containers to start
-3. Open browser to http://34.55.204.139:7860
+3. Open browser to http://34.55.204.139:3000
 4. Start using BECA!
 
 ### Finishing Work
@@ -142,8 +148,15 @@ All services run as Docker containers:
 ├─────────────────────────────────────────────┤
 │                                             │
 │  ┌──────────────────────────────────────┐  │
-│  │ beca-agent (Port 7860)               │  │
-│  │ - Gradio GUI                         │  │
+│  │ beca-frontend (Port 3000)            │  │
+│  │ - React UI                           │  │
+│  │ - Plan/Act Modes                     │  │
+│  │ - File Tree & Code Viewer            │  │
+│  └──────────────────────────────────────┘  │
+│                                             │
+│  ┌──────────────────────────────────────┐  │
+│  │ beca-backend (Port 8000)             │  │
+│  │ - FastAPI                            │  │
 │  │ - 39+ AI Tools                       │  │
 │  │ - Autonomous Learning                │  │
 │  └──────────────────────────────────────┘  │
@@ -182,11 +195,13 @@ gcloud compute ssh beca-ollama --zone=us-central1-b
 sudo docker ps
 
 # View logs
-sudo docker logs beca-agent
+sudo docker logs beca-frontend
+sudo docker logs beca-backend
 sudo docker logs ollama-gpu
 
 # Restart a specific container
-sudo docker restart beca-agent
+sudo docker restart beca-frontend
+sudo docker restart beca-backend
 
 # Stop all containers
 cd /opt/beca
@@ -219,11 +234,11 @@ sudo docker-compose -f docker/docker-compose.yml up -d --build
 
 ## 🛠️ Troubleshooting
 
-### BECA GUI Not Loading
+### BECA Frontend Not Loading
 1. Check VM is running: Run `check-beca.bat`
 2. Check containers: SSH in and run `sudo docker ps`
-3. Check logs: `sudo docker logs beca-agent`
-4. Restart container: `sudo docker restart beca-agent`
+3. Check logs: `sudo docker logs beca-frontend` or `sudo docker logs beca-backend`
+4. Restart container: `sudo docker restart beca-frontend` or `sudo docker restart beca-backend`
 
 ### GPU Not Working
 ```bash
@@ -250,7 +265,7 @@ sudo docker-compose -f docker/docker-compose.yml up -d --force-recreate
 ```
 
 ### Can't Access Services
-1. Check firewall rules allow ports 7860, 8080, 9000, 11434
+1. Check firewall rules allow ports 3000, 8000, 8080, 9000, 11434
 2. Verify external IP hasn't changed: Run `check-beca.bat`
 3. Check if containers are healthy: `sudo docker ps`
 
@@ -271,10 +286,11 @@ Even when you stop the VM, all this data remains intact.
 
 ## 🎯 Next Steps
 
-1. **Try BECA:** Visit http://34.55.204.139:7860
-2. **Set Up Portainer:** Visit http://34.55.204.139:9000 and create admin account
-3. **Test MCP Integration:** Configure Claude Desktop/Cline to connect to http://34.55.204.139:8080
-4. **Cost Optimization:** Remember to run `stop-beca.bat` when you're done for the day!
+1. **Try BECA:** Visit http://34.55.204.139:3000
+2. **Check API:** Visit http://34.55.204.139:8000/docs
+3. **Set Up Portainer:** Visit http://34.55.204.139:9000 and create admin account
+4. **Test MCP Integration:** Configure Claude Desktop/Cline to connect to http://34.55.204.139:8080
+5. **Cost Optimization:** Remember to run `stop-beca.bat` when you're done for the day!
 
 ---
 

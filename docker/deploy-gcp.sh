@@ -170,7 +170,8 @@ docker-compose -f docker/docker-compose.yml up -d
 echo "=========================================="
 echo "✓ BECA startup complete!"
 echo "=========================================="
-echo "Access BECA at: http://$(curl -s ifconfig.me):7860"
+echo "Access BECA Frontend: http://$(curl -s ifconfig.me):3000"
+echo "Access BECA Backend:  http://$(curl -s ifconfig.me):8000"
 echo "Portainer at: http://$(curl -s ifconfig.me):9000"
 echo "MCP Server at: http://$(curl -s ifconfig.me):8080"
 echo "=========================================="
@@ -190,18 +191,31 @@ create_firewall_rules() {
     
     echo "Allowing access from: $ALLOWED_IP"
     
-    # BECA Gradio GUI
-    gcloud compute firewall-rules create beca-gradio \
+    # BECA Frontend (React)
+    gcloud compute firewall-rules create beca-frontend \
         --project=$PROJECT_ID \
         --direction=INGRESS \
         --priority=1000 \
         --network=default \
         --action=ALLOW \
-        --rules=tcp:7860 \
+        --rules=tcp:3000 \
         --source-ranges=$ALLOWED_IP \
         --target-tags=beca-server \
-        --description="Allow BECA Gradio GUI access" \
-        2>/dev/null || echo "Firewall rule 'beca-gradio' already exists"
+        --description="Allow BECA React Frontend access" \
+        2>/dev/null || echo "Firewall rule 'beca-frontend' already exists"
+    
+    # BECA Backend (FastAPI)
+    gcloud compute firewall-rules create beca-backend \
+        --project=$PROJECT_ID \
+        --direction=INGRESS \
+        --priority=1000 \
+        --network=default \
+        --action=ALLOW \
+        --rules=tcp:8000 \
+        --source-ranges=$ALLOWED_IP \
+        --target-tags=beca-server \
+        --description="Allow BECA FastAPI Backend access" \
+        2>/dev/null || echo "Firewall rule 'beca-backend' already exists"
     
     # Portainer
     gcloud compute firewall-rules create beca-portainer \
@@ -321,9 +335,10 @@ get_vm_details() {
     echo "External IP: $EXTERNAL_IP"
     echo ""
     echo "Access URLs:"
-    echo "  BECA GUI:  http://$EXTERNAL_IP:7860"
-    echo "  Portainer: http://$EXTERNAL_IP:9000"
-    echo "  MCP Server: http://$EXTERNAL_IP:8080"
+    echo "  BECA Frontend: http://$EXTERNAL_IP:3000"
+    echo "  BECA Backend:  http://$EXTERNAL_IP:8000"
+    echo "  Portainer:     http://$EXTERNAL_IP:9000"
+    echo "  MCP Server:    http://$EXTERNAL_IP:8080"
     echo ""
     echo "SSH Command:"
     echo "  gcloud compute ssh $INSTANCE_NAME --project=$PROJECT_ID --zone=$ZONE"

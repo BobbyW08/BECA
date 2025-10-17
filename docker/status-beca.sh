@@ -55,33 +55,49 @@ if [ "$VM_STATUS" = "RUNNING" ]; then
     echo "=========================================="
     echo "Access URLs:"
     echo "=========================================="
-    echo "  BECA GUI:  http://$EXTERNAL_IP:7860"
-    echo "  Portainer: http://$EXTERNAL_IP:9000"
-    echo "  MCP Server: http://$EXTERNAL_IP:8080"
+    echo "  BECA Frontend (React): http://$EXTERNAL_IP:3000"
+    echo "  BECA Backend (API):    http://$EXTERNAL_IP:8000/docs"
+    echo "  Ollama API:            http://$EXTERNAL_IP:11434"
+    echo "  Portainer:             http://$EXTERNAL_IP:9000"
+    echo "  MCP Server:            http://$EXTERNAL_IP:8080"
     echo ""
     
     # Health checks
     echo "Health Checks:"
     
-    # Check BECA GUI
-    if curl -s -f "http://$EXTERNAL_IP:7860/" > /dev/null 2>&1; then
-        echo -e "  BECA GUI:  ${GREEN}✓ Healthy${NC}"
+    # Check BECA Frontend
+    if curl -s -f "http://$EXTERNAL_IP:3000/" > /dev/null 2>&1; then
+        echo -e "  BECA Frontend: ${GREEN}✓ Healthy${NC}"
     else
-        echo -e "  BECA GUI:  ${RED}✗ Not responding${NC}"
+        echo -e "  BECA Frontend: ${RED}✗ Not responding${NC}"
+    fi
+    
+    # Check BECA Backend
+    if curl -s -f "http://$EXTERNAL_IP:8000/health" > /dev/null 2>&1; then
+        echo -e "  BECA Backend:  ${GREEN}✓ Healthy${NC}"
+    else
+        echo -e "  BECA Backend:  ${RED}✗ Not responding${NC}"
+    fi
+    
+    # Check Ollama
+    if curl -s -f "http://$EXTERNAL_IP:11434/" > /dev/null 2>&1; then
+        echo -e "  Ollama API:    ${GREEN}✓ Healthy${NC}"
+    else
+        echo -e "  Ollama API:    ${RED}✗ Not responding${NC}"
     fi
     
     # Check Portainer
     if curl -s -f "http://$EXTERNAL_IP:9000/" > /dev/null 2>&1; then
-        echo -e "  Portainer: ${GREEN}✓ Healthy${NC}"
+        echo -e "  Portainer:     ${GREEN}✓ Healthy${NC}"
     else
-        echo -e "  Portainer: ${RED}✗ Not responding${NC}"
+        echo -e "  Portainer:     ${RED}✗ Not responding${NC}"
     fi
     
     # Check MCP Server
     if curl -s -f "http://$EXTERNAL_IP:8080/health" > /dev/null 2>&1; then
-        echo -e "  MCP Server: ${GREEN}✓ Healthy${NC}"
+        echo -e "  MCP Server:    ${GREEN}✓ Healthy${NC}"
     else
-        echo -e "  MCP Server: ${RED}✗ Not responding${NC}"
+        echo -e "  MCP Server:    ${RED}✗ Not responding${NC}"
     fi
     
 elif [ "$VM_STATUS" = "TERMINATED" ]; then

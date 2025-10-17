@@ -1,5 +1,15 @@
 # BECA Docker Deployment - Complete Summary
 
+> **⚠️ DEPRECATED - This document describes the old Gradio-based deployment**
+> 
+> **BECA now uses a modern React frontend + FastAPI backend architecture.**
+> 
+> **📖 See [START-BECA.md](../START-BECA.md) and [docker/README.md](README.md) for current deployment instructions.**
+> 
+> This document is kept for historical reference only.
+
+---
+
 ## ✅ What's Been Created
 
 A complete Docker-based, cloud-native deployment system for BECA that enables:
@@ -68,10 +78,14 @@ This creates:
 After deployment (wait 2-3 minutes for startup):
 
 ```
-BECA GUI:  http://YOUR_VM_IP:7860
-Portainer: http://YOUR_VM_IP:9000
-MCP Server: http://YOUR_VM_IP:8080
+BECA Frontend (React): http://YOUR_VM_IP:3000
+BECA Backend (API):    http://YOUR_VM_IP:8000/docs
+Ollama API:            http://YOUR_VM_IP:11434
+Portainer:             http://YOUR_VM_IP:9000
+MCP Server:            http://YOUR_VM_IP:8080
 ```
+
+> **Note:** Port 7860 was for the old Gradio GUI. Current deployment uses ports 3000 (frontend) and 8000 (backend).
 
 ## 📊 Daily Usage
 
@@ -83,9 +97,9 @@ bash docker/start-beca.sh
 # Check status
 bash docker/status-beca.sh
 
-# Access BECA GUI in browser
-open http://YOUR_VM_IP:7860  # Mac
-start http://YOUR_VM_IP:7860  # Windows
+# Access BECA Frontend in browser
+open http://YOUR_VM_IP:3000  # Mac
+start http://YOUR_VM_IP:3000  # Windows
 ```
 
 ### Evening Routine
@@ -99,12 +113,17 @@ bash docker/stop-beca.sh
 ## 🖥️ Managing from iPad
 
 ### Browser Access (Recommended)
-1. **BECA GUI**: `http://your-vm-ip:7860`
+1. **BECA Frontend**: `http://your-vm-ip:3000`
    - Chat with BECA
-   - Monitor learning
-   - View file changes
+   - Plan/Act mode toggle
+   - File tree browser
+   - Code viewer with diffs
 
-2. **Portainer**: `http://your-vm-ip:9000`
+2. **BECA Backend API**: `http://your-vm-ip:8000/docs`
+   - Interactive API documentation
+   - Test endpoints directly
+
+3. **Portainer**: `http://your-vm-ip:9000`
    - Manage containers
    - View logs
    - Restart services
@@ -200,10 +219,16 @@ See `docker/MCP-INTEGRATION.md` for complete details.
 │  GCP VM (Docker Containers)                             │
 ├─────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────────────────────────────┐   │
-│  │  BECA Agent (Python/Gradio) - Port 7860        │   │
-│  │  - Chat interface                               │   │
-│  │  - Learning dashboard                           │   │
-│  │  - File management                              │   │
+│  │  BECA Frontend (React) - Port 3000             │   │
+│  │  - Modern UI with Plan/Act modes               │   │
+│  │  - File tree browser                           │   │
+│  │  - Code viewer & diff viewer                   │   │
+│  └─────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  BECA Backend (FastAPI) - Port 8000            │   │
+│  │  - RESTful API                                  │   │
+│  │  - 39+ AI development tools                     │   │
+│  │  - Agent logic & memory systems                 │   │
 │  └─────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │  Ollama GPU - Port 11434                        │   │
@@ -245,7 +270,7 @@ See `docker/MCP-INTEGRATION.md` for complete details.
 
 ## 🛠️ Troubleshooting Quick Reference
 
-### Can't access BECA GUI
+### Can't access BECA Frontend
 
 ```bash
 # 1. Check VM is running
@@ -253,7 +278,7 @@ bash docker/status-beca.sh
 
 # 2. Wait 2-3 minutes after starting
 
-# 3. Check firewall
+# 3. Check firewall (ports 3000 and 8000)
 gcloud compute firewall-rules list --filter="name~beca"
 
 # 4. Verify your IP
@@ -406,10 +431,10 @@ Since you're on Windows, note that:
 2. **Scripts are already executable** in Git Bash/WSL
    - No need to run `chmod +x`
 
-3. **Accessing BECA GUI**:
+3. **Accessing BECA Frontend**:
    ```bash
    # In PowerShell or CMD
-   start http://YOUR_VM_IP:7860
+   start http://YOUR_VM_IP:3000
    ```
 
 4. **Configuration file editing**:

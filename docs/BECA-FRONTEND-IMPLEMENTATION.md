@@ -1,5 +1,11 @@
 # BECA Frontend Implementation - Complete
 
+> **✅ CURRENT ARCHITECTURE DOCUMENTATION**
+> 
+> This document describes BECA's current React + TypeScript frontend with FastAPI backend architecture.
+> 
+> **For usage instructions, see [START-BECA.md](../START-BECA.md)**
+
 ## Overview
 Successfully built a modern React + TypeScript frontend with FastAPI backend for BECA, featuring Plan/Act modes inspired by Cline.
 
@@ -256,9 +262,9 @@ After deployment:
 Frontend:  http://34.55.204.139:3000
 Backend:   http://34.55.204.139:8000
 API Docs:  http://34.55.204.139:8000/docs
-
-Old Gradio (backup): http://34.55.204.139:7860
 ```
+
+> **Note:** The old Gradio GUI (port 7860) has been deprecated and removed in favor of this modern architecture.
 
 ## 🎨 Design Philosophy
 

@@ -13,7 +13,7 @@ This Docker deployment transforms BECA into a fully containerized, cloud-native 
 │  Any Device (iPad/Laptop/Desktop)                       │
 │  ┌────────────────┐  ┌───────────────────────────┐    │
 │  │ VS Code        │  │ Browser                    │    │
-│  │ + Cline        │  │ Access BECA GUI           │    │
+│  │ + Cline        │  │ Access BECA UI            │    │
 │  │ (Local)        │  │ Portainer, MCP            │    │
 │  └────────────────┘  └───────────────────────────┘    │
 └───────────┬─────────────────────┬───────────────────────┘
@@ -23,15 +23,17 @@ This Docker deployment transforms BECA into a fully containerized, cloud-native 
 ┌─────────────────────────────────────────────────────────┐
 │  GCP VM - Docker Compose Stack                          │
 ├─────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌─────────────┐  ┌───────────────┐ │
-│  │ BECA Agent   │  │ Ollama+GPU  │  │ MCP Server    │ │
-│  │ (Gradio GUI) │  │ (T4 GPU)    │  │ (Claude API)  │ │
-│  │ Port: 7860   │  │ Port: 11434 │  │ Port: 8080    │ │
-│  └──────────────┘  └─────────────┘  └───────────────┘ │
-│  ┌──────────────┐                                      │
-│  │ Portainer    │ Docker Management from any device    │
-│  │ Port: 9000   │                                      │
-│  └──────────────┘                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
+│  │ BECA         │  │ BECA Backend │  │ Ollama+GPU   │ │
+│  │ Frontend     │  │ (FastAPI)    │  │ (T4 GPU)     │ │
+│  │ (React)      │  │ Port: 8000   │  │ Port: 11434  │ │
+│  │ Port: 3000   │  │              │  │              │ │
+│  └──────────────┘  └──────────────┘  └──────────────┘ │
+│  ┌──────────────┐  ┌──────────────┐                   │
+│  │ MCP Server   │  │ Portainer    │                   │
+│  │ (Claude API) │  │ Docker Mgmt  │                   │
+│  │ Port: 8080   │  │ Port: 9000   │                   │
+│  └──────────────┘  └──────────────┘                   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -86,9 +88,11 @@ The deployment script will output access URLs:
 
 ```
 Access URLs:
-  BECA GUI:  http://YOUR_IP:7860
-  Portainer: http://YOUR_IP:9000
-  MCP Server: http://YOUR_IP:8080
+  BECA Frontend (React): http://YOUR_IP:3000
+  BECA Backend (API):    http://YOUR_IP:8000/docs
+  Ollama API:            http://YOUR_IP:11434
+  Portainer:             http://YOUR_IP:9000
+  MCP Server:            http://YOUR_IP:8080
 ```
 
 **Note:** Wait 2-3 minutes after deployment for Docker containers to fully start and models to download.
@@ -123,10 +127,11 @@ Shows VM status, container health, and access URLs.
 
 ### Option 1: Web Browser (Safari/Chrome)
 
-1. **Access BECA GUI**: Open `http://your-vm-ip:7860`
+1. **Access BECA Frontend**: Open `http://your-vm-ip:3000`
    - Chat with BECA
-   - Monitor learning progress
-   - View file changes
+   - Plan/Act mode interface
+   - File tree browser
+   - Code viewer with diff
 
 2. **Access Portainer**: Open `http://your-vm-ip:9000`
    - Manage Docker containers
@@ -150,15 +155,26 @@ Shows VM status, container health, and access URLs.
 
 ## 🔧 Container Services
 
-### BECA Agent (Python/Gradio)
-- **Purpose**: Main BECA application with GUI
-- **Port**: 7860
+### BECA Frontend (React)
+- **Purpose**: Modern web interface for BECA
+- **Port**: 3000
 - **Features**:
   - Chat interface
-  - Autonomous learning dashboard
-  - Meta-learning metrics
+  - Plan/Act mode toggle
   - File tree browser
-  - Code viewer with diff
+  - Code viewer with syntax highlighting
+  - Diff viewer for changes
+  - Real-time updates
+
+### BECA Backend (FastAPI)
+- **Purpose**: RESTful API and AI agent logic
+- **Port**: 8000
+- **Features**:
+  - 39+ AI development tools
+  - Autonomous learning system
+  - Memory and knowledge systems
+  - Meta-learning capabilities
+  - File operations and Git integration
 
 ### Ollama GPU
 - **Purpose**: LLM inference with GPU acceleration
@@ -193,7 +209,7 @@ Shows VM status, container health, and access URLs.
 ### Firewall Rules
 
 The deployment automatically creates firewall rules that:
-- Restrict BECA GUI, Portainer, and MCP to your IP address
+- Restrict BECA Frontend, Backend, Portainer, and MCP to your IP address
 - Allow HTTP/HTTPS for nginx proxy (if enabled)
 - Use network tags for easy management
 
@@ -308,7 +324,7 @@ sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 sudo systemctl restart docker
 ```
 
-### Can't Access BECA GUI
+### Can't Access BECA Frontend
 
 1. **Check VM is running**:
    ```bash
@@ -391,7 +407,8 @@ gcloud compute scp beca-ollama:/opt/beca/beca_knowledge.db ./backups/ --zone=us-
 gcloud compute ssh beca-ollama --zone=us-central1-b --command="sudo docker-compose -f /opt/beca/docker/docker-compose.yml logs"
 
 # Specific container
-gcloud compute ssh beca-ollama --zone=us-central1-b --command="sudo docker logs beca-agent -f"
+gcloud compute ssh beca-ollama --zone=us-central1-b --command="sudo docker logs beca-frontend -f"
+gcloud compute ssh beca-ollama --zone=us-central1-b --command="sudo docker logs beca-backend -f"
 ```
 
 ## 📚 Additional Resources
@@ -412,4 +429,3 @@ For issues or questions:
 ## 📝 License
 
 Same as BECA project - MIT License
-

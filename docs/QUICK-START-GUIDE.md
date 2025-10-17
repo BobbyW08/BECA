@@ -1,6 +1,18 @@
 # BECA Enhanced GUI - Quick Start Guide
 
-## 🚀 Launch the Enhanced GUI
+> **⚠️ DEPRECATED - This guide is for the old Gradio-based GUI**
+> 
+> **BECA now uses a modern React frontend + FastAPI backend architecture.**
+> 
+> **📖 See [START-BECA.md](../START-BECA.md) for current usage instructions.**
+> 
+> **Quick Start:** Run `start-beca.bat` and access http://34.55.204.139:3000
+> 
+> This document is kept for historical reference only.
+
+---
+
+## 🚀 Launch the Enhanced GUI (OLD - Gradio)
 
 ```bash
 cd c:\dev
@@ -8,6 +20,8 @@ python beca_gui.py
 ```
 
 Then open your browser to: **http://127.0.0.1:7860**
+
+> **Note:** This local Gradio GUI has been replaced by a cloud-based Docker deployment with React frontend (port 3000) and FastAPI backend (port 8000).
 
 ---
 

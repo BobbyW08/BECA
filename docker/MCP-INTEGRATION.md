@@ -375,7 +375,7 @@ gcloud compute firewall-rules update beca-mcp \
 ./docker/status-beca.sh
 
 # Test BECA backend directly
-curl http://YOUR_VM_IP:7860/api/status
+curl http://YOUR_VM_IP:8000/api/status
 
 # Restart entire stack
 gcloud compute ssh beca-ollama --zone=us-central1-b \

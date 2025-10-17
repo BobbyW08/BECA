@@ -2,6 +2,13 @@
 # Deploy BECA Docker Stack to Existing VM
 # Uses your existing beca-ollama VM instead of creating a new one
 
+# ⚠️ DEPRECATED - This script uses SCP-based deployment
+# 
+# BECA now uses git-based deployment workflow.
+# See docker/deploy-gcp.sh for the current deployment method.
+# 
+# This script is kept for historical reference only.
+
 set -e
 
 # Colors
@@ -184,9 +191,11 @@ show_access_info() {
     echo "=========================================="
     echo ""
     echo "Access URLs:"
-    echo "  BECA GUI:  http://$EXTERNAL_IP:7860"
-    echo "  Portainer: http://$EXTERNAL_IP:9000"
-    echo "  MCP Server: http://$EXTERNAL_IP:8080"
+    echo "  BECA Frontend (React): http://$EXTERNAL_IP:3000"
+    echo "  BECA Backend (API):    http://$EXTERNAL_IP:8000/docs"
+    echo "  Ollama API:            http://$EXTERNAL_IP:11434"
+    echo "  Portainer:             http://$EXTERNAL_IP:9000"
+    echo "  MCP Server:            http://$EXTERNAL_IP:8080"
     echo ""
     echo "Note: Wait 2-3 minutes for containers to fully start"
     echo "      and for Ollama models to load."

@@ -4,17 +4,14 @@ __pycache__/
 *$py.class
 
 # Exclude large reference directories
-cline-reference/
 google-cloud-sdk/
-beca/
 vscode-beca-extension/
 
-# Database files
-*.db
-beca_knowledge.db
-beca_memory.db
-api/beca_knowledge.db
-api/beca_memory.db
+# NOTE: Database files are tracked in Git (solo dev, want backup)
+# If multiple devs in future, uncomment these:
+# *.db
+# data/*.db
+
 *.so
 .Python
 build/
