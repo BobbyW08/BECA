@@ -5,7 +5,6 @@ __pycache__/
 
 # Exclude large reference directories
 google-cloud-sdk/
-vscode-beca-extension/
 
 # NOTE: Database files are tracked in Git (solo dev, want backup)
 # If multiple devs in future, uncomment these:
