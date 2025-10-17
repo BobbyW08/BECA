@@ -34,6 +34,6 @@ echo If EXTERNAL_IP changed, we need to update batch files
 echo If ping fails, network issue
 echo If docker ps shows no containers, containers didn't start
 echo.
-echo Try accessing: http://%BECA_IP%:7860
+echo Try accessing: http://%BECA_IP%:3000
 echo.
 pause

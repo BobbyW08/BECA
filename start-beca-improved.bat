@@ -22,14 +22,15 @@ echo ==========================================
 echo Opening BECA in your browser...
 echo ==========================================
 echo.
-start http://%BECA_IP%:7860
+start http://%BECA_IP%:3000
 echo.
-echo Browser should be opening to: http://%BECA_IP%:7860
+echo Browser should be opening to: http://%BECA_IP%:3000
 echo If it doesn't open automatically, copy and paste the URL above.
 echo.
-echo BECA GUI: http://%BECA_IP%:7860
-echo Portainer: http://%BECA_IP%:9000
-echo MCP Server: http://%BECA_IP%:8080
+echo BECA Frontend: http://%BECA_IP%:3000
+echo BECA Backend:  http://%BECA_IP%:8000
+echo Portainer:     http://%BECA_IP%:9000
+echo MCP Server:    http://%BECA_IP%:8080
 echo.
 echo Press any key to close this window...
 pause >nul

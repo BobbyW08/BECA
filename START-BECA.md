@@ -9,7 +9,7 @@
 ### Windows Method
 1. **Double-click `start-beca.bat`** in `C:\dev\`
 2. Wait 60 seconds for Docker containers to start
-3. Open browser to **http://34.55.204.139:7860**
+3. Open browser to **http://34.55.204.139:3000**
 4. Start using BECA! 🎉
 
 ### iPad/Mobile Method
@@ -17,7 +17,7 @@
 2. Go to **Compute Engine → VM Instances**
 3. Click **START** on `beca-ollama` instance
 4. Wait 60 seconds
-5. Open browser to **http://34.55.204.139:7860**
+5. Open browser to **http://34.55.204.139:3000**
 
 **Done!** No Python setup, no pip installs, no virtual environments needed.
 
@@ -27,10 +27,17 @@
 
 Your BECA setup includes:
 
-### BECA AI Agent (Main Interface)
-- **URL**: http://34.55.204.139:7860
-- **Port**: 7860
-- Full Gradio GUI with 39+ AI tools
+### BECA Frontend (React UI)
+- **URL**: http://34.55.204.139:3000
+- **Port**: 3000
+- Modern React interface with Plan/Act modes
+- File tree, code viewer, diff viewer
+- Real-time updates
+
+### BECA Backend (FastAPI)
+- **URL**: http://34.55.204.139:8000
+- **Port**: 8000
+- RESTful API with 39+ AI tools
 - Autonomous learning system
 - Memory and knowledge systems
 
@@ -136,11 +143,11 @@ stop-beca.bat
 
 ### Windows Laptop/Desktop
 - Use batch files (`start-beca.bat`, `stop-beca.bat`)
-- Access at http://34.55.204.139:7860
+- Access at http://34.55.204.139:3000
 
 ### iPad/Tablet
 - Start VM from Google Cloud Console app
-- Open Safari/Chrome to http://34.55.204.139:7860
+- Open Safari/Chrome to http://34.55.204.139:3000
 - Full functionality (no app needed!)
 
 ### Other Computers
@@ -151,7 +158,7 @@ stop-beca.bat
 
 ## Troubleshooting
 
-### ❌ Can't Access http://34.55.204.139:7860
+### ❌ Can't Access http://34.55.204.139:3000
 
 **Solution 1**: Check if VM is running
 ```powershell
@@ -179,7 +186,8 @@ gcloud compute ssh beca-ollama --zone=us-central1-b
 sudo docker ps
 
 # View logs:
-sudo docker logs beca-agent
+sudo docker logs beca-frontend
+sudo docker logs beca-backend
 sudo docker logs ollama-gpu
 
 # Restart containers if needed:
@@ -210,8 +218,10 @@ gcloud compute ssh beca-ollama --zone=us-central1-b --command="sudo docker exec 
 ### Container Architecture
 ```
 beca-ollama VM (Google Cloud)
-├── beca-agent (Port 7860)
-│   └── Gradio GUI + BECA tools
+├── beca-frontend (Port 3000)
+│   └── React UI + Modern interface
+├── beca-backend (Port 8000)
+│   └── FastAPI + 39+ AI tools
 ├── ollama-gpu (Port 11434)
 │   └── AI models with GPU acceleration
 ├── mcp-server (Port 8080)
@@ -238,8 +248,11 @@ Even when you stop the VM, all data remains intact!
 # SSH into VM
 gcloud compute ssh beca-ollama --zone=us-central1-b
 
-# Restart BECA agent
-sudo docker restart beca-agent
+# Restart BECA frontend
+sudo docker restart beca-frontend
+
+# Restart BECA backend
+sudo docker restart beca-backend
 
 # Restart Ollama
 sudo docker restart ollama-gpu
@@ -250,14 +263,17 @@ sudo docker restart ollama-gpu
 # SSH into VM
 gcloud compute ssh beca-ollama --zone=us-central1-b
 
-# View BECA logs
-sudo docker logs beca-agent --tail 100
+# View BECA frontend logs
+sudo docker logs beca-frontend --tail 100
+
+# View BECA backend logs
+sudo docker logs beca-backend --tail 100
 
 # View Ollama logs
 sudo docker logs ollama-gpu --tail 100
 
 # Follow logs in real-time
-sudo docker logs -f beca-agent
+sudo docker logs -f beca-backend
 ```
 
 ### Update BECA Code
@@ -339,7 +355,8 @@ stop-beca.bat                     # Stop VM (Windows)
 check-beca.bat                    # Check status (Windows)
 
 # Access URLs
-http://34.55.204.139:7860        # BECA GUI
+http://34.55.204.139:3000        # BECA Frontend
+http://34.55.204.139:8000        # BECA Backend API
 http://34.55.204.139:9000        # Portainer
 http://34.55.204.139:8080        # MCP Server
 http://34.55.204.139:11434       # Ollama API
@@ -355,7 +372,7 @@ https://console.cloud.google.com  # Manage from any device
 ### To Use BECA:
 1. ✅ Run `start-beca.bat` (or start from cloud console)
 2. ✅ Wait 60 seconds
-3. ✅ Open http://34.55.204.139:7860
+3. ✅ Open http://34.55.204.139:3000
 4. ✅ Use BECA!
 5. ✅ Run `stop-beca.bat` when done (save money!)
 
