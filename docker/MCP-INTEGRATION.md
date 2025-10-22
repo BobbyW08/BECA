@@ -1,4 +1,4 @@
-# BECA MCP Integration Guide
+ok# BECA MCP Integration Guide
 
 Connect Claude Desktop or Cline extension to BECA's MCP server to access all 39+ tools as MCP resources.
 

@@ -8,14 +8,17 @@ See **[START-BECA.md](START-BECA.md)** for complete Docker/cloud setup instructi
 
 **TL;DR:**
 ```batch
-# 1. Double-click start-beca.bat (or start VM from Google Cloud Console)
+# 1. Double-click start-beca.bat (Windows - automatically opens browser with correct IP)
 start-beca.bat
 
-# 2. Wait 60 seconds for containers to start
+# 2. Wait 90 seconds for containers to start
 
-# 3. Open browser
-http://34.55.204.139:3000
+# 3. Browser opens automatically to BECA
+# Or manually get IP: gcloud compute instances describe beca-ollama --zone=us-central1-b --format="value(networkInterfaces[0].accessConfigs[0].natIP)"
+# Then visit: http://[EXTERNAL-IP]:3000
 ```
+
+**Note**: The external IP changes each time the VM starts (SPOT instance). `start-beca.bat` automatically fetches and uses the current IP.
 
 **✨ Docker Setup:** BECA runs in cloud containers - no local Python setup needed!
 
@@ -212,7 +215,7 @@ else:
 ### Model Configurations
 
 #### 1. **Llama 3.1 8B** (General Tasks)
-- **Base URL**: `http://34.46.140.140:11434`
+- **Base URL**: `http://ollama-gpu:11434` (internal Docker network) or `http://[EXTERNAL-IP]:11434` (external access)
 - **Purpose**: Conversation, reasoning, tool use, planning
 - **Parameters**:
   ```python
@@ -224,7 +227,7 @@ else:
   ```
 
 #### 2. **Qwen2.5-Coder 7B** (Code Specialist)
-- **Base URL**: `http://34.46.140.140:11434`
+- **Base URL**: `http://ollama-gpu:11434` (internal Docker network) or `http://[EXTERNAL-IP]:11434` (external access)
 - **Purpose**: Code generation, debugging, code review
 - **Parameters**:
   ```python
@@ -613,7 +616,7 @@ watchdog          # File watching
 ### Environment Variables
 
 BECA doesn't require API keys, but uses:
-- `OLLAMA_URL = "http://34.46.140.140:11434"` (hardcoded in `src/langchain_agent.py`)
+- `OLLAMA_URL = "http://ollama-gpu:11434"` (internal Docker network URL configured in docker-compose.yml)
 
 ---
 
@@ -729,8 +732,8 @@ Modify `beca_gui.py` for UI changes:
 - Missing deps → Install: `pip install -r requirements.txt`
 
 **3. Slow responses**
-- High network latency → Check ping to `34.46.140.140`
-- GPU not used → SSH and check: `nvidia-smi`
+- High network latency → Check your internet connection
+- GPU not used → SSH and check: `sudo docker exec ollama-gpu nvidia-smi`
 
 **4. Firewall blocking**
 - IP changed → Run: `python setup_firewall.py`

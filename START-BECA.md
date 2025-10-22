@@ -6,18 +6,24 @@
 
 ## Quick Start (Every Time)
 
-### Windows Method
+### Windows Method ⭐ RECOMMENDED
 1. **Double-click `start-beca.bat`** in `C:\dev\`
-2. Wait 60 seconds for Docker containers to start
-3. Open browser to **http://34.55.204.139:3000**
+2. Wait 90 seconds for Docker containers to start
+3. **Browser will automatically open** with the correct IP address
 4. Start using BECA! 🎉
+
+**Note**: The script automatically fetches the current external IP and opens your browser to the correct address. This is the easiest method!
 
 ### iPad/Mobile Method
 1. Visit https://console.cloud.google.com
 2. Go to **Compute Engine → VM Instances**
 3. Click **START** on `beca-ollama` instance
-4. Wait 60 seconds
-5. Open browser to **http://34.55.204.139:3000**
+4. Wait 90 seconds for containers to start
+5. **Click on the VM name** `beca-ollama` to see details
+6. Copy the **External IP** shown in the details
+7. Open browser to **http://[EXTERNAL-IP]:3000** (replace [EXTERNAL-IP] with the copied IP)
+
+**Note**: The external IP changes every time you start the VM (SPOT instance behavior). Always check the current IP from the VM details page.
 
 **Done!** No Python setup, no pip installs, no virtual environments needed.
 
@@ -28,36 +34,36 @@
 Your BECA setup includes:
 
 ### BECA Frontend (React UI)
-- **URL**: http://34.55.204.139:3000
+- **URL**: http://[EXTERNAL-IP]:3000
 - **Port**: 3000
 - Modern React interface with Plan/Act modes
 - File tree, code viewer, diff viewer
 - Real-time updates
 
 ### BECA Backend (FastAPI)
-- **URL**: http://34.55.204.139:8000
+- **URL**: http://[EXTERNAL-IP]:8000
 - **Port**: 8000
 - RESTful API with 39+ AI tools
 - Autonomous learning system
 - Memory and knowledge systems
 
 ### Ollama (GPU-Accelerated AI)
-- **URL**: http://34.55.204.139:11434
+- **URL**: http://[EXTERNAL-IP]:11434
 - **Port**: 11434
 - NVIDIA Tesla T4 GPU
 - Models: Llama 3.1 8B + Qwen2.5-Coder 7B
 
 ### MCP Server (Claude/Cline Integration)
-- **URL**: http://34.55.204.139:8080
+- **URL**: http://[EXTERNAL-IP]:8080
 - **Port**: 8080
 - Model Context Protocol for IDE integration
 
 ### Portainer (Docker Management)
-- **URL**: http://34.55.204.139:9000
+- **URL**: http://[EXTERNAL-IP]:9000
 - **Port**: 9000
 - Visual container management interface
 
-All services auto-start when the VM boots!
+**All services now automatically start when the VM boots!** 🎉
 
 ---
 
@@ -143,38 +149,43 @@ stop-beca.bat
 
 ### Windows Laptop/Desktop
 - Use batch files (`start-beca.bat`, `stop-beca.bat`)
-- Access at http://34.55.204.139:3000
+- Browser opens automatically to correct IP address
 
 ### iPad/Tablet
 - Start VM from Google Cloud Console app
-- Open Safari/Chrome to http://34.55.204.139:3000
+- Get current external IP from VM details page
+- Open Safari/Chrome to http://[EXTERNAL-IP]:3000
 - Full functionality (no app needed!)
 
 ### Other Computers
 - Start VM from https://console.cloud.google.com
-- Access BECA in any browser
+- Get current external IP from VM details page
+- Access BECA in any browser at http://[EXTERNAL-IP]:3000
 
 ---
 
 ## Troubleshooting
 
-### ❌ Can't Access http://34.55.204.139:3000
+### ❌ Can't Access BECA
 
-**Solution 1**: Check if VM is running
-```powershell
-gcloud compute instances list --project=beca-0001
-# Look for STATUS = RUNNING
-```
+**IMPORTANT**: The external IP address changes every time you start the VM (SPOT instance behavior).
 
-**Solution 2**: Wait longer (containers need time to start)
-```powershell
-# After starting VM, wait 60-90 seconds
-```
+**Solution**: Always use `start-beca.bat` on Windows - it automatically finds and opens the correct IP!
 
-**Solution 3**: Check if IP changed
+**For iPad/Mobile users**: 
+1. Go to Google Cloud Console → Compute Engine → VM Instances
+2. Click on `beca-ollama` VM name to see details
+3. Copy the current **External IP** address
+4. Open browser to `http://[EXTERNAL-IP]:3000`
+
+**Manual IP lookup**:
 ```powershell
 gcloud compute instances describe beca-ollama --zone=us-central1-b --format="value(networkInterfaces[0].accessConfigs[0].natIP)"
 ```
+
+**Still not working?**
+- Wait 90 seconds for containers to start after VM boots
+- Check VM status: `gcloud compute instances list --project=beca-0001`
 
 ### ❌ Containers Not Starting
 
@@ -337,12 +348,14 @@ This is very rare and the savings are worth it!
 - `readme.md` - Full BECA documentation
 
 ### Portainer Management
-Visit **http://34.55.204.139:9000** for:
+Visit **http://[EXTERNAL-IP]:9000** for:
 - Visual container management
 - Resource monitoring
 - Log viewing
 - Container restart/rebuild
 - Volume management
+
+**Note**: The external IP changes each time the VM starts. Use `start-beca.bat` on Windows (automatically opens correct IP) or get the current IP from the VM details page in Google Cloud Console.
 
 ---
 
@@ -354,12 +367,16 @@ start-beca.bat                    # Start VM (Windows)
 stop-beca.bat                     # Stop VM (Windows)
 check-beca.bat                    # Check status (Windows)
 
-# Access URLs
-http://34.55.204.139:3000        # BECA Frontend
-http://34.55.204.139:8000        # BECA Backend API
-http://34.55.204.139:9000        # Portainer
-http://34.55.204.139:8080        # MCP Server
-http://34.55.204.139:11434       # Ollama API
+# Access URLs (replace [EXTERNAL-IP] with current VM IP)
+http://[EXTERNAL-IP]:3000        # BECA Frontend
+http://[EXTERNAL-IP]:8000        # BECA Backend API
+http://[EXTERNAL-IP]:9000        # Portainer
+http://[EXTERNAL-IP]:8080        # MCP Server
+http://[EXTERNAL-IP]:11434       # Ollama API
+
+# Get current external IP:
+# Windows: Run start-beca.bat (automatically uses correct IP)
+# Manual:  gcloud compute instances describe beca-ollama --zone=us-central1-b --format="value(networkInterfaces[0].accessConfigs[0].natIP)"
 
 # Cloud Console
 https://console.cloud.google.com  # Manage from any device
@@ -370,9 +387,9 @@ https://console.cloud.google.com  # Manage from any device
 ## Summary
 
 ### To Use BECA:
-1. ✅ Run `start-beca.bat` (or start from cloud console)
-2. ✅ Wait 60 seconds
-3. ✅ Open http://34.55.204.139:3000
+1. ✅ Run `start-beca.bat` (Windows - automatically opens browser with correct IP)
+2. ✅ Wait 90 seconds for containers to start
+3. ✅ Browser opens automatically to BECA (or get IP from VM details and visit http://[EXTERNAL-IP]:3000)
 4. ✅ Use BECA!
 5. ✅ Run `stop-beca.bat` when done (save money!)
 
