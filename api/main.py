@@ -12,7 +12,8 @@ from pathlib import Path
 import asyncio
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# In Docker, src is mounted at /app/src, and main.py is at /app/main.py
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 # Import BECA components
 try:
