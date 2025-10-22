@@ -19,8 +19,18 @@ interface BECAProviderProps {
 }
 
 export const BECAProvider: React.FC<BECAProviderProps> = ({ children }) => {
-  // Get API URL from environment or default to localhost
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  // Get API URL - use current host with backend port 8000
+  // This allows the frontend to work with dynamic IPs (VM restarts)
+  const getApiUrl = () => {
+    // If running in development (localhost:3000), use localhost:8000
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+    // In production (VM), use the same host as the frontend but port 8000
+    return `http://${window.location.hostname}:8000`;
+  };
+  
+  const apiUrl = getApiUrl();
   const [mode, setMode] = useState<'plan' | 'act'>('plan');
 
   const sendMessage = useCallback(async (message: string) => {
