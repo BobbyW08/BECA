@@ -1,6 +1,6 @@
 # BECA - Badass Expert Coding Agent 🤖
 
-BECA is a self-improving AI coding assistant powered by LangChain and Ollama, running on cloud GPU with autonomous learning capabilities.
+BECA is a self-improving AI coding assistant powered by LangChain and Ollama, running on cloud GPU with autonomous learning capabilities and a modern React frontend.
 
 ## Quick Start
 
@@ -13,9 +13,8 @@ start-beca.bat
 
 # 2. Wait 90 seconds for containers to start
 
-# 3. Browser opens automatically to BECA
-# Or manually get IP: gcloud compute instances describe beca-ollama --zone=us-central1-b --format="value(networkInterfaces[0].accessConfigs[0].natIP)"
-# Then visit: http://[EXTERNAL-IP]:3000
+# 3. Browser opens automatically to BECA React frontend
+# Or manually get IP and visit: http://[EXTERNAL-IP]:3000
 ```
 
 **Note**: The external IP changes each time the VM starts (SPOT instance). `start-beca.bat` automatically fetches and uses the current IP.
@@ -56,59 +55,90 @@ BECA is an autonomous AI coding agent that:
 - **Multi-Model Architecture** - Dual LLMs for optimal performance (general + coding specialist)
 - **Cloud GPU Power** - Google Cloud T4 GPU for fast inference (SPOT pricing ~$0.17/hr)
 - **Local-First** - No API keys needed, runs on your infrastructure
-- **Visual Interface** - Modern React frontend with Plan/Act modes, file tree, code viewer, and diff visualization
+- **Modern React Frontend** - Visual interface with Plan/Act modes, file tree, code viewer, and diff visualization
 
 ---
 
 ## Architecture
 
-**Note:** The architecture diagrams below document the historical Gradio-based implementation. BECA now uses a modern **React frontend** (port 3000) and **FastAPI backend** (port 8000) in a Docker multi-container setup. See [START-BECA.md](START-BECA.md) for current architecture details.
+BECA uses a modern Docker-based microservices architecture with a React frontend and FastAPI backend.
 
-BECA uses a modular, layered architecture designed for extensibility and autonomous improvement.
-
-### System Architecture Diagram (Historical - Gradio)
+### System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    BECA GUI (Gradio)                        │
+│              BECA Frontend (React + TypeScript)             │
+│                      Port 3000 (Nginx)                      │
 │  ┌──────────┐  ┌──────────┐  ┌────────────────────────┐   │
 │  │File Tree │  │   Chat   │  │ Code Viewer / Diff     │   │
+│  │ Explorer │  │ Interface│  │ Syntax Highlighting    │   │
 │  └──────────┘  └──────────┘  └────────────────────────┘   │
+│             Plan/Act Mode Toggle • Status Bar              │
 └────────────────────────┬────────────────────────────────────┘
-                         │
+                         │ HTTP/WebSocket
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              LangChain Agent (ReAct Pattern)                │
+│           BECA Backend (FastAPI + Python)                   │
+│                    Port 8000                                │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │  Agent Core: create_tool_calling_agent               │  │
-│  │  • Reasoning loop                                     │  │
-│  │  • Tool selection & execution                         │  │
-│  │  • Response generation                                │  │
+│  │  REST API Endpoints                                   │  │
+│  │  • /api/chat (Plan & Act modes)                      │  │
+│  │  • /api/files/tree, /read, /diff                     │  │
+│  │  • /api/status, /health                              │  │
 │  └──────────────────────────────────────────────────────┘  │
 └────────────────────────┬────────────────────────────────────┘
                          │
           ┌──────────────┴──────────────┐
           ▼                             ▼
-┌──────────────────┐          ┌──────────────────┐
-│  Llama 3.1 8B    │          │ Qwen2.5-Coder 7B │
-│  (General)       │          │  (Code Focused)  │
-│                  │          │                  │
-│ • Conversation   │          │ • Code gen       │
-│ • Tool use       │          │ • Debugging      │
-│ • Planning       │          │ • Code review    │
-└──────────────────┘          └──────────────────┘
-          ▲                             ▲
-          └─────────────┬───────────────┘
-                        │
-              Ollama Server (Cloud GPU)
-              34.46.140.140:11434
-                        │
-          ┌─────────────┴─────────────┐
-          ▼                           ▼
-┌──────────────────┐        ┌──────────────────┐
-│  T4 GPU (16GB)   │        │  SPOT Instance   │
-│  us-central1-b   │        │  ~$0.17/hour     │
-└──────────────────┘        └──────────────────┘
+┌──────────────────────┐    ┌──────────────────────┐
+│  LangChain Agent     │    │   39 BECA Tools      │
+│  (ReAct Pattern)     │────│   • File Operations  │
+│                      │    │   • Git Integration  │
+│  • Tool Selection    │    │   • Code Analysis    │
+│  • Execution         │    │   • Memory System    │
+│  • Response Gen      │    │   • Knowledge Base   │
+└──────────┬───────────┘    └──────────────────────┘
+           │
+    ┌──────┴──────┐
+    ▼             ▼
+┌────────────┐  ┌────────────────┐
+│ Llama 3.1  │  │ Qwen2.5-Coder  │
+│ 8B         │  │ 7B-Instruct    │
+│ (General)  │  │ (Code Focus)   │
+└────────────┘  └────────────────┘
+    │             │
+    └──────┬──────┘
+           ▼
+┌─────────────────────────────────────┐
+│   Ollama Server (Docker Container)  │
+│        Port 11434                   │
+│   • GPU Acceleration (T4)           │
+│   • Model Management                │
+│   • Inference Engine                │
+└─────────────────────────────────────┘
+```
+
+### Docker Services
+
+```
+┌─────────────────────────────────────────────────┐
+│         Docker Compose Stack                     │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  beca-frontend (React)        → Port 3000      │
+│  beca-backend (FastAPI)       → Port 8000      │
+│  ollama-gpu (LLM Engine)      → Port 11434     │
+│  mcp-server (Claude MCP)      → Port 8080      │
+│  portainer (Management)       → Port 9000      │
+│                                                 │
+│  Network: beca-network (172.28.0.0/16)         │
+│                                                 │
+│  Volumes:                                       │
+│   • beca-memory (SQLite DBs)                   │
+│   • beca-workspace (Project Files)             │
+│   • ollama-models (~10GB)                      │
+│                                                 │
+└─────────────────────────────────────────────────┘
 ```
 
 ### Tool Architecture
@@ -214,37 +244,37 @@ else:
 
 ### Model Configurations
 
-#### 1. **Llama 3.1 8B** (General Tasks)
-- **Base URL**: `http://ollama-gpu:11434` (internal Docker network) or `http://[EXTERNAL-IP]:11434` (external access)
+#### 1. **Llama 3.1 8B** (Primary - General Tasks)
+- **Base URL**: `http://ollama-gpu:11434` (internal Docker network)
 - **Purpose**: Conversation, reasoning, tool use, planning
 - **Parameters**:
   ```python
-  temperature=0.3        # Balanced creativity
-  num_predict=256        # Shorter responses for speed
-  num_ctx=2048          # Context window
-  top_k=20              # Speed optimization
+  temperature=0.4        # Balanced creativity
+  num_predict=512        # Response length
+  num_ctx=4096          # Context window
+  top_k=40              # Token selection
   top_p=0.9             # Nucleus sampling
   ```
 
-#### 2. **Qwen2.5-Coder 7B** (Code Specialist)
-- **Base URL**: `http://ollama-gpu:11434` (internal Docker network) or `http://[EXTERNAL-IP]:11434` (external access)
+#### 2. **Qwen2.5-Coder 7B-Instruct** (Specialist - Code Tasks)
+- **Base URL**: `http://ollama-gpu:11434` (internal Docker network)
 - **Purpose**: Code generation, debugging, code review
 - **Parameters**:
   ```python
   temperature=0.2        # More deterministic for code
-  num_predict=512        # Longer responses for code
-  num_ctx=4096          # Larger context for code
-  top_k=20
-  top_p=0.9
+  num_predict=512        # Response length
+  num_ctx=4096          # Context window for code
+  top_k=20              # Focused token selection
+  top_p=0.9             # Nucleus sampling
   ```
 
 ### Agent Configuration
 
 - **Framework**: LangChain with ReAct pattern
-- **Agent Type**: `create_tool_calling_agent` (optimized for Llama 3.1)
-- **Max Iterations**: 5
-- **Max Execution Time**: 30 seconds
-- **Early Stopping**: Generate response on max iterations
+- **Agent Type**: `create_react_agent` (optimized for Llama 3.1)
+- **Max Iterations**: 10
+- **Max Execution Time**: 60 seconds
+- **Early Stopping**: Force tool execution before stopping
 - **Error Handling**: Custom parsing error handler
 
 ---
@@ -450,34 +480,59 @@ CREATE TABLE tool_usage (
 ## File Structure
 
 ```
-C:\dev\
-├── beca_gui.py                 # Main Gradio GUI application
-├── requirements.txt            # Python dependencies
-├── START-BECA.md              # Startup instructions
-├── readme.md                  # This file
+c:\dev\
+├── start-beca.bat              # VM startup (Windows)
+├── stop-beca.bat               # VM shutdown (Windows)
+├── get-beca-ip.bat             # Get VM IP (Windows)
+├── readme.md                   # This file
+├── START-BECA.md              # Detailed startup guide
+├── requirements.txt           # Python dependencies
 │
-├── src/                       # Source code
-│   ├── langchain_agent.py     # LangChain ReAct agent
-│   ├── langchain_tools.py     # Core development tools (20)
-│   ├── memory_db.py          # SQLite memory system
-│   ├── memory_tools.py       # Memory management tools (6)
-│   ├── knowledge_system.py   # Knowledge base & web scraper
-│   ├── knowledge_tools.py    # Learning tools (8)
-│   ├── codebase_explorer.py  # Codebase analysis tools (4)
-│   ├── ai_model_tools.py     # AI model tools (5)
-│   ├── autonomous_learning.py # Background learning system
-│   ├── gui_utils.py          # File tree, code viewer, diff viewer
-│   ├── file_tracker.py       # Track file changes for GUI
-│   └── code_generator.py     # Code generation utilities
+├── api/                       # FastAPI Backend
+│   ├── main.py               # Main API server
+│   ├── Dockerfile            # Backend container
+│   ├── requirements.txt      # Backend dependencies
+│   ├── beca_knowledge.db     # Knowledge database
+│   └── beca_memory.db        # Memory database
 │
-├── create_vm.py              # GCP VM creation script
-├── setup_firewall.py         # Firewall configuration
-├── start_beca_vm.py          # VM startup automation
+├── frontend/                  # React Frontend
+│   ├── src/                  # React source code
+│   │   ├── App.tsx          # Main app component
+│   │   ├── components/      # UI components
+│   │   └── context/         # React context
+│   ├── Dockerfile           # Frontend container
+│   ├── nginx.conf           # Nginx config
+│   └── package.json         # NPM dependencies
 │
-└── Data Files (auto-generated)
-    ├── beca_memory.db        # Memory database
-    ├── beca_knowledge.db     # Knowledge database
-    └── C:/beca-learning/     # Learning resources storage
+├── src/                      # Python Source Code
+│   ├── langchain_agent.py   # LangChain ReAct agent
+│   ├── langchain_tools.py   # Core development tools (20)
+│   ├── memory_db.py         # SQLite memory system
+│   ├── memory_tools.py      # Memory management tools (6)
+│   ├── knowledge_system.py  # Knowledge base & web scraper
+│   ├── knowledge_tools.py   # Learning tools (8)
+│   ├── codebase_explorer.py # Codebase analysis tools (4)
+│   ├── ai_model_tools.py    # AI model tools (5)
+│   ├── autonomous_learning.py # Background learning
+│   └── [other utilities]
+│
+├── docker/                   # Docker Configuration
+│   ├── docker-compose.yml   # Multi-container setup
+│   ├── Dockerfile.beca      # BECA backend image
+│   ├── Dockerfile.mcp       # MCP server image
+│   ├── nginx.conf           # Reverse proxy config
+│   ├── deploy-gcp.sh        # GCP deployment script
+│   └── [other configs]
+│
+├── scripts/                  # Utility Scripts
+│   ├── deployment/          # Deployment automation
+│   ├── vm/                  # VM management
+│   └── [other scripts]
+│
+└── archive/                  # Deprecated Code
+    └── deprecated-2025-10/
+        ├── beca_gui.py      # Old Gradio interface
+        └── [other old files]
 ```
 
 ---
@@ -538,85 +593,63 @@ class KnowledgeBase:
     def search_knowledge(query, category=None, limit=10)
 ```
 
-### WebDocScraper Class (`src/knowledge_system.py`)
-
-```python
-class WebDocScraper:
-    @staticmethod
-    def fetch_and_parse(url: str) -> Dict[str, str]
-
-    @staticmethod
-    def scrape_documentation_site(base_url, kb, category, max_pages=20)
-```
-
 ---
 
 ## Setup & Configuration
 
 ### Prerequisites
 
-- Python 3.8+
-- Google Cloud SDK
+- Docker & Docker Compose
+- Google Cloud SDK (for VM deployment)
 - Git
-- Virtual environment
 
-### Installation
+### Local Development
 
 ```bash
 # 1. Clone repository
-cd C:\dev
+cd c:\dev
 
-# 2. Create virtual environment
-python -m venv .venv
+# 2. Start Docker stack
+cd docker
+docker-compose up -d
 
-# 3. Activate environment
-.\.venv\Scripts\Activate.ps1  # Windows
-source .venv/bin/activate      # Unix/Mac
-
-# 4. Install dependencies
-pip install -r requirements.txt
-```
-
-### Dependencies
-
-```
-# Core
-requests
-pydantic
-jinja2
-
-# LangChain
-langchain
-langchain-community
-langchain-ollama
-
-# GUI
-gradio
-pygments          # Syntax highlighting
-watchdog          # File watching
+# 3. Access BECA
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8000/docs
 ```
 
 ### Cloud GPU Setup
 
 1. **Create VM**:
    ```bash
-   python create_vm.py
+   cd docker
+   ./deploy-gcp.sh
    ```
 
-2. **Configure Firewall**:
-   ```bash
-   python setup_firewall.py
+2. **Start VM** (Windows):
+   ```batch
+   start-beca.bat
    ```
 
-3. **Start VM**:
-   ```bash
-   gcloud compute instances start beca-ollama --zone=us-central1-b --project=beca-0001
+3. **Get VM IP**:
+   ```batch
+   get-beca-ip.bat
+   ```
+
+4. **Stop VM** (to save costs):
+   ```batch
+   stop-beca.bat
    ```
 
 ### Environment Variables
 
-BECA doesn't require API keys, but uses:
-- `OLLAMA_URL = "http://ollama-gpu:11434"` (internal Docker network URL configured in docker-compose.yml)
+Set in `docker/.env`:
+```env
+OLLAMA_URL=http://ollama-gpu:11434
+GCP_PROJECT_ID=beca-0001
+GCP_ZONE=us-central1-b
+MCP_AUTH_TOKEN=your-secure-token
+```
 
 ---
 
@@ -627,7 +660,7 @@ BECA doesn't require API keys, but uses:
 - **Instance Type**: n1-standard-4 (SPOT)
 - **GPU**: NVIDIA T4 (16GB)
 - **Zone**: us-central1-b
-- **Disk**: 50GB SSD
+- **Disk**: 100GB SSD
 
 ### Cost Breakdown
 
@@ -643,20 +676,49 @@ BECA doesn't require API keys, but uses:
 ### Cost-Saving Tips
 
 1. **Always stop when not in use**:
-   ```bash
-   gcloud compute instances stop beca-ollama --zone=us-central1-b --project=beca-0001
+   ```batch
+   stop-beca.bat
    ```
 
 2. **Set up budget alerts** in Google Cloud Console
 
 3. **Monitor usage**:
    ```bash
-   gcloud compute instances list --project=beca-0001 --format="table(name,zone,status,creationTimestamp)"
+   gcloud compute instances list --project=beca-0001
    ```
 
 4. **Daily workflow** (saves ~$3/day):
-   - Morning: Start VM
-   - Evening: Stop VM
+   - Morning: `start-beca.bat`
+   - Evening: `stop-beca.bat`
+
+---
+
+## API Documentation
+
+### REST API Endpoints
+
+**Base URL**: `http://[VM-IP]:8000`
+
+#### Chat
+- `POST /api/chat` - Send message with Plan/Act mode
+  ```json
+  {
+    "message": "Create a React app",
+    "mode": "plan",
+    "history": []
+  }
+  ```
+
+#### Files
+- `GET /api/files/tree` - Get file tree
+- `POST /api/files/read` - Read file content
+- `POST /api/files/diff` - Get file diff
+
+#### Status
+- `GET /api/status` - System status
+- `GET /health` - Health check
+
+**Full API Docs**: `http://[VM-IP]:8000/docs` (Swagger UI)
 
 ---
 
@@ -664,9 +726,8 @@ BECA doesn't require API keys, but uses:
 
 ### Adding New Tools
 
-1. **Create tool in appropriate file**:
+1. **Create tool** in `src/langchain_tools.py`:
    ```python
-   # In src/langchain_tools.py or new file
    from langchain_core.tools import tool
 
    @tool
@@ -678,7 +739,6 @@ BECA doesn't require API keys, but uses:
 
 2. **Export tool**:
    ```python
-   # Add to BECA_TOOLS list
    BECA_TOOLS = [
        # ... existing tools
        my_new_tool,
@@ -687,7 +747,7 @@ BECA doesn't require API keys, but uses:
 
 ### Extending Memory
 
-Add new tables to `src/memory_db.py`:
+Add tables to `src/memory_db.py`:
 ```python
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS my_table (
@@ -705,17 +765,9 @@ Edit `src/langchain_agent.py`:
 new_model = ChatOllama(
     model="model-name",
     base_url=OLLAMA_URL,
-    temperature=0.5,
     ...
 )
 ```
-
-### GUI Customization
-
-Modify `beca_gui.py` for UI changes:
-- File tree: `gui_utils.py` → `FileTreeManager`
-- Code viewer: `gui_utils.py` → `CodeViewer`
-- Diff viewer: `gui_utils.py` → `DiffViewer`
 
 ---
 
@@ -724,19 +776,24 @@ Modify `beca_gui.py` for UI changes:
 ### Common Issues
 
 **1. Connection refused**
-- VM is stopped → Start it
-- Ollama not running → SSH and restart: `sudo systemctl restart ollama`
+- VM is stopped → Run `start-beca.bat`
+- Containers not running → SSH and check: `sudo docker ps`
 
-**2. ModuleNotFoundError**
-- Wrong environment → Activate: `.\.venv\Scripts\Activate.ps1`
-- Missing deps → Install: `pip install -r requirements.txt`
+**2. Frontend not loading**
+- Check browser console for errors
+- Verify API URL in Settings panel
+- Ensure backend is running on port 8000
 
 **3. Slow responses**
-- High network latency → Check your internet connection
+- High network latency → Check internet connection
 - GPU not used → SSH and check: `sudo docker exec ollama-gpu nvidia-smi`
 
-**4. Firewall blocking**
-- IP changed → Run: `python setup_firewall.py`
+**4. Models not found**
+- Models not pulled → SSH and run:
+  ```bash
+  sudo docker exec ollama-gpu ollama pull llama3.1:8b
+  sudo docker exec ollama-gpu ollama pull qwen2.5-coder:7b-instruct
+  ```
 
 ---
 
@@ -744,19 +801,19 @@ Modify `beca_gui.py` for UI changes:
 
 ### Why This Design?
 
-1. **Dual Models**: Task-specific optimization (conversation vs code)
-2. **SQLite Storage**: Fast, local, no external dependencies
-3. **Autonomous Learning**: Continuous improvement without manual intervention
-4. **Tool Modularity**: Easy to add/remove capabilities
+1. **Microservices**: Independent scaling and deployment
+2. **Dual Models**: Task-specific optimization (conversation vs code)
+3. **SQLite Storage**: Fast, local, no external dependencies
+4. **Docker**: Consistent environments, easy deployment
 5. **Cloud GPU**: Cost-effective power (SPOT instances)
-6. **Memory System**: Context-aware responses using past learnings
+6. **React Frontend**: Modern UI with real-time updates
 
 ### Scalability
 
-- **Tools**: Add infinitely via decorator pattern
-- **Models**: Swap/add models in agent config
+- **Horizontal**: Add more backend/frontend containers
+- **Tools**: Infinite extensibility via decorator pattern
+- **Models**: Swap/add models without code changes
 - **Storage**: SQLite handles millions of records efficiently
-- **Learning**: Background threads don't block main flow
 
 ---
 
@@ -764,7 +821,8 @@ Modify `beca_gui.py` for UI changes:
 
 - **LangChain Docs**: https://python.langchain.com/
 - **Ollama**: https://ollama.ai/
-- **Gradio**: https://gradio.app/
+- **React**: https://react.dev/
+- **FastAPI**: https://fastapi.tiangolo.com/
 - **Google Cloud**: https://cloud.google.com/
 
 ---
@@ -781,4 +839,4 @@ This is a personal project, but feel free to fork and extend!
 
 ---
 
-**Built with ❤️ by BECA's human companion**
+**Built with ❤️
