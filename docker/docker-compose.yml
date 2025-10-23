@@ -34,9 +34,33 @@ services:
       start_period: 40s
 
   # ============================================
-  # NOTE: Frontend has been archived (React → Theia transition)
-  # Frontend service removed - will be replaced with Theia IDE in Phase 2
+  # BECA Frontend - Eclipse Theia IDE with BECA extension
   # ============================================
+  beca-frontend:
+    build:
+      context: ../frontend-theia
+      dockerfile: Dockerfile
+    container_name: beca-frontend
+    hostname: beca-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Theia IDE
+    volumes:
+      # Mount C:/dev workspace into the IDE
+      - C:/dev:/workspace:cached
+    environment:
+      - BECA_API_URL=http://beca-backend:8000
+      - NODE_ENV=production
+    networks:
+      - beca-network
+    depends_on:
+      - beca-backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # ============================================
   # Ollama with GPU - LLM inference engine

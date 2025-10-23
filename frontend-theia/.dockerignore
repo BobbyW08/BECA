@@ -1,0 +1,10 @@
+node_modules
+lib
+src-gen
+.git
+.gitignore
+*.md
+.vscode
+.theia
+dist
+build
