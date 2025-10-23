@@ -4,7 +4,7 @@ import { BECAChatWidget } from './beca-chat-widget';
 import { WidgetFactory } from '@theia/core/lib/browser';
 import { bindViewContribution, FrontendApplicationContribution } from '@theia/core/lib/browser';
 import { BECAViewContribution } from './beca-view-contribution';
-import '../../src/browser/style/beca-chat.css';
+import './style/beca-chat.css';
 
 export default new ContainerModule(bind => {
     // Bind API service as singleton
