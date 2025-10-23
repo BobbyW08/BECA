@@ -8,6 +8,6 @@ websockets>=12.0
 # Pinned to 0.3.x (last stable before 1.0 breaking changes)
 # Our code is compatible with 0.3.x API
 langchain==0.3.7
-langchain-core==0.3.18
+langchain-core<0.4.0,>=0.3.76
 langchain-community==0.3.7
 langchain-ollama==0.3.10
