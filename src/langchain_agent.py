@@ -170,16 +170,16 @@ def handle_parsing_error(error) -> str:
     """Handle parsing errors by providing guidance"""
     return "I encountered a formatting issue. Let me provide a clear response based on what I've done so far."
 
-# Create the agent executor with more aggressive tool execution
+# Create the agent executor with no iteration limits
 agent_executor = AgentExecutor(
     agent=agent,
     tools=BECA_TOOLS,
     verbose=True,  # Show thinking process
     handle_parsing_errors=handle_parsing_error,
-    max_iterations=10,  # Increased to allow tool execution + response
-    max_execution_time=60,  # Increased timeout for tool execution
+    max_iterations=None,  # No limit - let agent work until done
+    max_execution_time=600,  # 10 minutes safety timeout
     return_intermediate_steps=True,  # Return steps for debugging
-    early_stopping_method="force",  # Force tool execution before stopping
+    early_stopping_method="generate",  # Generate answer naturally
 )
 
 
@@ -258,10 +258,10 @@ def chat_with_agent(message: str, force_model: str = None) -> str:
             tools=BECA_TOOLS,
             verbose=True,
             handle_parsing_errors=handle_parsing_error,
-            max_iterations=10,
-            max_execution_time=60,
+            max_iterations=None,  # No limit - let agent work until done
+            max_execution_time=600,  # 10 minutes safety timeout
             return_intermediate_steps=True,
-            early_stopping_method="force",
+            early_stopping_method="generate",  # Generate answer naturally
         )
         model_used = CODER_MODEL
     else:

@@ -11,6 +11,40 @@ import os
 from pathlib import Path
 import asyncio
 
+# Security: BECA operates only within C:/dev
+ALLOWED_BASE_PATH = Path("C:/dev").resolve()
+
+def validate_path(requested_path: str) -> Path:
+    """
+    Validate that a path is within C:/dev.
+    Raises HTTPException if path is outside allowed directory.
+    
+    Args:
+        requested_path: Path to validate
+        
+    Returns:
+        Resolved Path object if valid
+        
+    Raises:
+        HTTPException: If path is outside C:/dev
+    """
+    try:
+        abs_path = Path(requested_path).resolve()
+        
+        # Check if path is within C:/dev
+        if not abs_path.is_relative_to(ALLOWED_BASE_PATH):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access denied: BECA can only access files within {ALLOWED_BASE_PATH}"
+            )
+        
+        return abs_path
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid path: {str(e)}"
+        )
+
 # Add src to path
 # In Docker, src is mounted at /app/src, and main.py is at /app/main.py
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -42,6 +76,13 @@ try:
 except ImportError:
     META_LEARNING_AVAILABLE = False
     meta_learning = None
+
+try:
+    from google_drive_manager import drive_manager
+    GDRIVE_AVAILABLE = True
+except ImportError:
+    GDRIVE_AVAILABLE = False
+    drive_manager = None
 
 # Initialize FastAPI
 app = FastAPI(
@@ -316,7 +357,8 @@ async def get_files_tree():
 async def read_file(request: FileReadRequest):
     """Read a file with syntax highlighting support"""
     try:
-        file_path = Path(request.path)
+        # Validate path is within C:/dev
+        file_path = validate_path(request.path)
         
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="File not found")
@@ -333,6 +375,8 @@ async def read_file(request: FileReadRequest):
             path=request.path
         )
         
+    except HTTPException:
+        raise  # Re-raise path validation errors
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -340,7 +384,8 @@ async def read_file(request: FileReadRequest):
 async def get_file_diff(request: DiffRequest):
     """Generate diff for a file"""
     try:
-        file_path = Path(request.path)
+        # Validate path is within C:/dev
+        file_path = validate_path(request.path)
         
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="File not found")
@@ -367,6 +412,8 @@ async def get_file_diff(request: DiffRequest):
             has_changes=has_changes
         )
         
+    except HTTPException:
+        raise  # Re-raise path validation errors
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -392,6 +439,71 @@ async def get_status():
             pass
     
     return status
+
+# ============================================================================
+# Google Drive Endpoints
+# ============================================================================
+
+@app.post("/api/gdrive/auth")
+async def authenticate_gdrive():
+    """Authenticate with Google Drive"""
+    if not GDRIVE_AVAILABLE or not drive_manager:
+        raise HTTPException(
+            status_code=503, 
+            detail="Google Drive integration not available"
+        )
+    
+    try:
+        success, message = drive_manager.authenticate()
+        return {
+            "success": success,
+            "message": message,
+            "authenticated": drive_manager.authenticated
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/gdrive/status")
+async def gdrive_status():
+    """Get Google Drive authentication status"""
+    if not GDRIVE_AVAILABLE or not drive_manager:
+        return {
+            "available": False,
+            "authenticated": False,
+            "message": "Google Drive integration not available"
+        }
+    
+    # Check if credentials.json exists
+    creds_path = Path("C:/dev/credentials.json")
+    has_credentials = creds_path.exists()
+    
+    return {
+        "available": True,
+        "authenticated": drive_manager.authenticated,
+        "has_credentials": has_credentials,
+        "credentials_path": str(creds_path) if has_credentials else None
+    }
+
+@app.get("/api/gdrive/files")
+async def list_gdrive_files(folder_id: Optional[str] = None):
+    """List files in Google Drive"""
+    if not GDRIVE_AVAILABLE or not drive_manager:
+        raise HTTPException(
+            status_code=503,
+            detail="Google Drive integration not available"
+        )
+    
+    if not drive_manager.authenticated:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated with Google Drive. Call /api/gdrive/auth first."
+        )
+    
+    try:
+        result = drive_manager.list_files(folder_id=folder_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # WebSocket for Real-time Updates (Optional - for streaming)
