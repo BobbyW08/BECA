@@ -4,7 +4,13 @@ LangChain Agent for BECA using Ollama
 import sys
 import subprocess
 from langchain_ollama import ChatOllama
-from langchain.agents import AgentExecutor, create_react_agent
+try:
+    from langchain.agents import AgentExecutor, create_react_agent
+except ImportError:
+    # For newer LangChain versions
+    from langchain.agents import AgentExecutor
+    from langchain.agents import create_react_agent
+
 from langchain_core.prompts import PromptTemplate
 from langchain_tools import BECA_TOOLS
 
