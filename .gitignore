@@ -51,6 +51,7 @@ Thumbs.db
 /.beca/logs
 memory.json
 *.log
+credentials.json
 
 # Claude Code / AI assistants
 .claude/

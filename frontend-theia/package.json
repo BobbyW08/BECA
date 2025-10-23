@@ -1,0 +1,35 @@
+{
+  "name": "beca-theia",
+  "version": "1.0.0",
+  "description": "BECA IDE powered by Eclipse Theia",
+  "private": true,
+  "license": "MIT",
+  "author": "BECA Team",
+  "workspaces": [
+    "browser-app",
+    "beca-extension"
+  ],
+  "scripts": {
+    "prepare": "yarn build && yarn download:plugins",
+    "build": "yarn --cwd browser-app build",
+    "start": "yarn --cwd browser-app start",
+    "download:plugins": "theia download:plugins",
+    "watch": "yarn --cwd browser-app watch"
+  },
+  "devDependencies": {
+    "@theia/cli": "^1.43.0",
+    "lerna": "^6.0.0"
+  },
+  "theia": {
+    "frontend": {
+      "config": {
+        "applicationName": "BECA IDE",
+        "preferences": {
+          "files.autoSave": "afterDelay",
+          "editor.fontSize": 14,
+          "terminal.integrated.fontSize": 14
+        }
+      }
+    }
+  }
+}
