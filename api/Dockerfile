@@ -9,6 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY main.py .
 
+# Note: src/ directory is mounted as a volume in docker-compose.yml
+# This allows for live code updates without rebuilding
+
 # Expose port
 EXPOSE 8000
 
