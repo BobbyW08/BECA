@@ -23,6 +23,9 @@ RUN yarn build
 # Stage 2: Production image
 FROM node:20-alpine
 
+# Install git for production dependencies
+RUN apk add --no-cache git
+
 WORKDIR /app
 
 # Install only production dependencies
