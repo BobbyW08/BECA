@@ -1,6 +1,9 @@
 # Stage 1: Build the Theia application
 FROM node:18-alpine AS builder
 
+# Install git and python (required by some node modules)
+RUN apk add --no-cache git python3 make g++
+
 WORKDIR /app
 
 # Copy package files
