@@ -32,6 +32,9 @@ WORKDIR /app
 COPY --from=builder /app/package.json /app/yarn.lock* ./
 COPY --from=builder /app/browser-app/package.json ./browser-app/
 
+# Install theia CLI globally for production
+RUN yarn global add @theia/cli@^1.43.0
+
 RUN yarn install --production --frozen-lockfile
 
 # Copy built application
