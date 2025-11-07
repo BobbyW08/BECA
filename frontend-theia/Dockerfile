@@ -17,7 +17,12 @@ RUN yarn install --frozen-lockfile
 # Copy beca-extension source
 COPY beca-extension/ ./beca-extension/
 
-# Copy source files
+# Build beca-extension first
+WORKDIR /app/beca-extension
+RUN yarn build
+
+# Copy remaining source files
+WORKDIR /app
 COPY . .
 
 # Build the browser app
