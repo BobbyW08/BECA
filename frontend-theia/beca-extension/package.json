@@ -24,7 +24,8 @@
     "@types/node": "^18.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "mkdir -p lib/browser/style && cp src/browser/style/*.css lib/browser/style/ 2>/dev/null || true",
     "watch": "tsc -w",
     "clean": "rimraf lib"
   },

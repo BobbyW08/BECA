@@ -17,7 +17,7 @@ RUN yarn install --frozen-lockfile
 # Copy beca-extension source
 COPY beca-extension/ ./beca-extension/
 
-# Build beca-extension first
+# Build beca-extension first (build script now handles CSS copying)
 WORKDIR /app/beca-extension
 RUN yarn build
 
