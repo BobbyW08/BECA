@@ -120,11 +120,11 @@ echo.
 echo ==========================================
 echo Access URLs:
 echo ==========================================
-echo   BECA Frontend:  http://%BECA_IP%:3000
-echo   BECA Backend:   http://%BECA_IP%:8000/docs
-echo   Portainer:      http://%BECA_IP%:9000
-echo   MCP Server:     http://%BECA_IP%:8080
-echo   Ollama:         http://%BECA_IP%:11434
+echo   Theia IDE (BECA): http://%BECA_IP%:3000
+echo   BECA Backend:     http://%BECA_IP%:8000/docs
+echo   Portainer:        http://%BECA_IP%:9000
+echo   MCP Server:       http://%BECA_IP%:8080
+echo   Ollama:           http://%BECA_IP%:11434
 echo.
 echo ==========================================
 echo Useful Commands:
@@ -135,5 +135,7 @@ echo   Check status:          validate-startup.bat
 echo   Test agent:            test-agent.bat
 echo   Diagnose issues:       diagnose-beca.bat
 echo.
-echo Press any key to close this window...
-pause >nul
+echo Window will remain open - close manually when done.
+echo To stop the VM and save costs, run: stop-beca.bat
+echo.
+pause

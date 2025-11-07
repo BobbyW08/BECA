@@ -49,6 +49,6 @@ echo ==========================================
 echo.
 echo If you saw a JSON response above with file listings, the agent is working!
 echo.
-echo To test a more complex task, access: http://%BECA_IP%:3000
+echo To test a more complex task, access Theia IDE: http://%BECA_IP%:3000
 echo.
 pause

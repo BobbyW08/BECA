@@ -12,7 +12,7 @@ echo ==========================================
 echo.
 echo Access BECA at:
 echo.
-echo   Frontend:  http://%BECA_IP%:3000
+echo   Theia IDE: http://%BECA_IP%:3000
 echo   Backend:   http://%BECA_IP%:8000
 echo   Portainer: http://%BECA_IP%:9000
 echo   MCP:       http://%BECA_IP%:8080

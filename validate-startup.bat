@@ -91,7 +91,7 @@ echo [SUCCESS] All critical services are healthy!
 echo ==========================================
 echo.
 echo Access URLs:
-echo   BECA Frontend:  http://%BECA_IP%:3000
+echo   Theia IDE:      http://%BECA_IP%:3000
 echo   BECA Backend:   http://%BECA_IP%:8000/docs
 echo   Portainer:      http://%BECA_IP%:9000
 echo   MCP Server:     http://%BECA_IP%:8080

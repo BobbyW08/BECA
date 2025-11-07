@@ -25,11 +25,11 @@ if errorlevel 1 (
 )
 echo.
 
-echo [4/5] Checking firewall rules for port 3000...
+echo [4/5] Checking firewall rules for port 3000 (Theia IDE)...
 gcloud compute firewall-rules list --filter="name:beca" --format="table(name,allowed[].ports,sourceRanges)" 2>nul
-echo.
 
-echo [5/5] Testing connection to BECA Frontend (port 3000)...
+echo.
+echo [5/5] Testing connection to Theia IDE (port 3000)...
 echo Attempting to connect to %BECA_IP%:3000...
 curl -v -m 5 http://%BECA_IP%:3000 2>&1 | findstr /C:"Connected" /C:"refused" /C:"timeout"
 echo.
@@ -54,6 +54,6 @@ echo If you see a VPN icon in your browser:
 echo   - Try disabling your VPN temporarily
 echo   - VPNs can sometimes block GCP connections
 echo.
-echo Try accessing: http://%BECA_IP%:3000
+echo Try accessing Theia IDE at: http://%BECA_IP%:3000
 echo.
 pause
