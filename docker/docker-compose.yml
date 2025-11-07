@@ -5,9 +5,7 @@ services:
   # BECA Backend - FastAPI application with Plan/Act modes
   # ============================================
   beca-backend:
-    build:
-      context: ../api
-      dockerfile: Dockerfile
+    image: gcr.io/beca-0001/beca-backend:latest
     container_name: beca-backend
     hostname: beca-backend
     restart: unless-stopped
@@ -37,9 +35,7 @@ services:
   # BECA Frontend - Eclipse Theia IDE with BECA extension
   # ============================================
   beca-frontend:
-    build:
-      context: ../frontend-theia
-      dockerfile: Dockerfile
+    image: gcr.io/beca-0001/beca-frontend:latest
     container_name: beca-frontend
     hostname: beca-frontend
     restart: unless-stopped
@@ -96,9 +92,7 @@ services:
   # MCP Server - Claude integration
   # ============================================
   mcp-server:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.mcp
+    image: gcr.io/beca-0001/beca-mcp:latest
     container_name: mcp-server
     hostname: mcp-server
     restart: unless-stopped
@@ -165,6 +159,26 @@ services:
       - portainer
     profiles:
       - production  # Only start with --profile production
+
+  # ============================================
+  # Watchtower - Auto-update containers
+  # ============================================
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    hostname: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true  # Remove old images after updating
+      - WATCHTOWER_POLL_INTERVAL=300  # Check every 5 minutes
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - WATCHTOWER_ROLLING_RESTART=true  # Update one container at a time
+      - WATCHTOWER_NOTIFICATIONS=shoutrrr://logger://
+    networks:
+      - beca-network
+    command: --debug
 
 # ============================================
 # Networks

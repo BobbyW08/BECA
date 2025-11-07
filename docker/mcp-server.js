@@ -11,7 +11,7 @@ const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const BECA_API_URL = process.env.BECA_API_URL || 'http://beca-agent:7860';
+const BECA_API_URL = process.env.BECA_API_URL || 'http://beca-backend:8000';
 
 // Middleware
 app.use(cors());
