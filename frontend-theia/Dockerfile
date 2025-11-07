@@ -23,8 +23,8 @@ RUN yarn build
 # Stage 2: Production image
 FROM node:20-alpine
 
-# Install git for production dependencies
-RUN apk add --no-cache git
+# Install git, python, and build tools for production dependencies
+RUN apk add --no-cache git python3 py3-setuptools make g++
 
 WORKDIR /app
 
