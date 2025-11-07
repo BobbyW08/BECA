@@ -13,16 +13,16 @@ export class BECAChatWidget extends ReactWidget {
     static readonly LABEL = 'BECA Chat';
 
     @inject(BECAApiService)
-    protected readonly becaApi: BECAApiService;
+    protected readonly becaApi!: BECAApiService;
 
     @inject(MessageService)
-    protected readonly messageService: MessageService;
+    protected readonly messageService!: MessageService;
 
     @inject(FileService)
-    protected readonly fileService: FileService;
+    protected readonly fileService!: FileService;
 
     @inject(EditorManager)
-    protected readonly editorManager: EditorManager;
+    protected readonly editorManager!: EditorManager;
 
     private messages: BECAMessage[] = [];
     private inputValue: string = '';
