@@ -47,7 +47,7 @@ services:
       - "3000:3000"  # Theia IDE
     volumes:
       # Mount workspace into the IDE
-      - /opt/beca/workspace:/workspace:cached
+      - beca-workspace:/workspace
     environment:
       - BECA_API_URL=http://beca-backend:8000
       - NODE_ENV=production
