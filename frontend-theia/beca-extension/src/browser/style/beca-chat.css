@@ -1,0 +1,231 @@
+/* BECA Chat Widget Styles */
+
+.beca-chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--theia-editor-background);
+    color: var(--theia-editor-foreground);
+}
+
+.beca-chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: var(--theia-titleBar-activeBackground);
+    border-bottom: 1px solid var(--theia-panel-border);
+}
+
+.beca-chat-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.beca-chat-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.beca-chat-controls button {
+    padding: 5px 10px;
+    border: 1px solid var(--theia-button-border);
+    background: var(--theia-button-background);
+    color: var(--theia-button-foreground);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.beca-chat-controls button:hover {
+    background: var(--theia-button-hoverBackground);
+}
+
+.beca-chat-controls button.active {
+    background: var(--theia-button-hoverBackground);
+    border-color: var(--theia-focusBorder);
+}
+
+.mode-toggle {
+    font-weight: 600;
+    min-width: 60px;
+}
+
+.beca-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    border-radius: 8px;
+    max-width: 85%;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.user {
+    align-self: flex-end;
+    background: var(--theia-button-background);
+    border: 1px solid var(--theia-button-border);
+}
+
+.message.assistant {
+    align-self: flex-start;
+    background: var(--theia-editorWidget-background);
+    border: 1px solid var(--theia-panel-border);
+}
+
+.message.loading {
+    opacity: 0.7;
+}
+
+.message-role {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--theia-descriptionForeground);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.message-content {
+    font-size: 13px;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+.message-content p {
+    margin: 5px 0;
+}
+
+.message-content code {
+    background: var(--theia-editorWidget-background);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.message-content pre {
+    background: var(--theia-editorWidget-background);
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.message-content pre code {
+    padding: 0;
+    background: none;
+}
+
+.message-content strong {
+    font-weight: 600;
+    color: var(--theia-editor-foreground);
+}
+
+.message-timestamp {
+    font-size: 10px;
+    color: var(--theia-descriptionForeground);
+    margin-top: 6px;
+    text-align: right;
+}
+
+.beca-chat-input {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: var(--theia-editorWidget-background);
+    border-top: 1px solid var(--theia-panel-border);
+}
+
+.beca-chat-input textarea {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--theia-input-border);
+    background: var(--theia-input-background);
+    color: var(--theia-input-foreground);
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+}
+
+.beca-chat-input textarea:focus {
+    border-color: var(--theia-focusBorder);
+}
+
+.beca-chat-input textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.send-button {
+    padding: 10px 20px;
+    background: var(--theia-button-background);
+    color: var(--theia-button-foreground);
+    border: 1px solid var(--theia-button-border);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.send-button:hover:not(:disabled) {
+    background: var(--theia-button-hoverBackground);
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Scrollbar styling */
+.beca-chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.beca-chat-messages::-webkit-scrollbar-track {
+    background: var(--theia-editorWidget-background);
+}
+
+.beca-chat-messages::-webkit-scrollbar-thumb {
+    background: var(--theia-scrollbarSlider-background);
+    border-radius: 4px;
+}
+
+.beca-chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--theia-scrollbarSlider-hoverBackground);
+}

@@ -5,6 +5,7 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
+    "beca-extension": "1.0.0",
     "@theia/core": "^1.43.0",
     "@theia/editor": "^1.43.0",
     "@theia/filesystem": "^1.43.0",

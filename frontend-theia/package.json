@@ -6,7 +6,8 @@
   "license": "MIT",
   "author": "BECA Team",
   "workspaces": [
-    "browser-app"
+    "browser-app",
+    "beca-extension"
   ],
   "scripts": {
     "prepare": "yarn build && yarn download:plugins",
