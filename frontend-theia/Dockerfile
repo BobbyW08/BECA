@@ -1,5 +1,5 @@
 # Stage 1: Build the Theia application
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Install git and python (required by some node modules)
 RUN apk add --no-cache git python3 make g++
@@ -26,7 +26,7 @@ WORKDIR /app/browser-app
 RUN yarn build
 
 # Stage 2: Production image
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
