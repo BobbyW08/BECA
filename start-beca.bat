@@ -41,6 +41,17 @@ echo Current IP: %BECA_IP%
 echo.
 
 echo ==========================================
+echo Starting BECA Containers...
+echo ==========================================
+echo.
+echo Checking if containers are running and starting if needed...
+gcloud compute ssh beca-ollama --zone=us-central1-b --command="cd /opt/beca/docker && sudo docker-compose up -d"
+echo.
+echo Waiting 15 seconds for containers to initialize...
+timeout /t 15 /nobreak
+echo.
+
+echo ==========================================
 echo Checking BECA Services...
 echo ==========================================
 echo.
@@ -112,11 +123,6 @@ echo ==========================================
 echo [SUCCESS] BECA is Ready!
 echo ==========================================
 echo.
-echo Opening BECA in your browser...
-echo.
-start http://%BECA_IP%:3000
-echo.
-
 echo ==========================================
 echo Access URLs:
 echo ==========================================
@@ -132,10 +138,25 @@ echo ==========================================
 echo   Stop VM (save costs):  stop-beca.bat
 echo   Get current IP:        get-beca-ip.bat
 echo   Check status:          validate-startup.bat
-echo   Test agent:            test-agent.bat
 echo   Diagnose issues:       diagnose-beca.bat
 echo.
-echo Window will remain open - close manually when done.
+echo Opening BECA in your default browser...
+echo.
+start "" http://%BECA_IP%:3000
+echo.
+echo Waiting 3 seconds for browser to launch...
+timeout /t 3 /nobreak >nul
+echo.
+echo ==========================================
+echo Browser should now be open at: http://%BECA_IP%:3000
+echo.
+echo IMPORTANT: If BECA Chat doesn't work:
+echo   1. Check browser console (F12) for connection errors
+echo   2. Verify backend is running: http://%BECA_IP%:8000/health
+echo   3. Try refreshing the browser page
+echo.
 echo To stop the VM and save costs, run: stop-beca.bat
+echo Keep this window open to see the VM status.
+echo ==========================================
 echo.
 pause

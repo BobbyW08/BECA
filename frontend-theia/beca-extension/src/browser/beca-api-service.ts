@@ -26,11 +26,31 @@ export class BECAApiService {
     private apiUrl: string;
 
     constructor() {
-        // Get API URL from environment or use default
-        this.apiUrl = process.env.BECA_API_URL || 'http://localhost:8000';
+        // Dynamically determine API URL based on current host
+        // This allows the frontend to work with any external IP
+        const protocol = window.location.protocol; // http: or https:
+        const hostname = window.location.hostname; // e.g., 34.134.149.22 or localhost
+        
+        // If BECA_API_URL is explicitly set in environment, use it
+        // Otherwise, use the same host as frontend but port 8000
+        this.apiUrl = process.env.BECA_API_URL || `${protocol}//${hostname}:8000`;
+        
+        console.log(`BECA API URL: ${this.apiUrl}`);
+        
         this.apiClient = axios.create({
             baseURL: this.apiUrl,
             timeout: 300000, // 5 minutes for long-running tasks
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    }
+    setApiUrl(url: string): void {
+        this.apiUrl = url;
+        console.log(`BECA API URL updated to: ${this.apiUrl}`);
+        this.apiClient = axios.create({
+            baseURL: this.apiUrl,
+            timeout: 300000,
             headers: {
                 'Content-Type': 'application/json',
             }
@@ -136,20 +156,6 @@ export class BECAApiService {
             console.error('Error writing file:', error);
             throw error;
         }
-    }
-
-    /**
-     * Set API URL (for dynamic IP configuration)
-     */
-    setApiUrl(url: string): void {
-        this.apiUrl = url;
-        this.apiClient = axios.create({
-            baseURL: this.apiUrl,
-            timeout: 300000,
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
     }
 
     /**

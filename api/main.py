@@ -11,12 +11,22 @@ import os
 from pathlib import Path
 import asyncio
 
-# Security: BECA operates only within C:/dev
-ALLOWED_BASE_PATH = Path("C:/dev").resolve()
+# Security: BECA operates only within a specific directory
+# Detect environment - use /workspace in Docker/VM, C:/dev locally on Windows
+import platform
+
+if platform.system() == "Windows" and not os.path.exists("/workspace"):
+    # Local Windows development
+    ALLOWED_BASE_PATH = Path("C:/dev").resolve()
+else:
+    # Linux VM or Docker container
+    ALLOWED_BASE_PATH = Path("/workspace").resolve()
+    # Create workspace directory if it doesn't exist
+    ALLOWED_BASE_PATH.mkdir(parents=True, exist_ok=True)
 
 def validate_path(requested_path: str) -> Path:
     """
-    Validate that a path is within C:/dev.
+    Validate that a path is within the allowed base path.
     Raises HTTPException if path is outside allowed directory.
     
     Args:
@@ -26,12 +36,12 @@ def validate_path(requested_path: str) -> Path:
         Resolved Path object if valid
         
     Raises:
-        HTTPException: If path is outside C:/dev
+        HTTPException: If path is outside allowed directory
     """
     try:
         abs_path = Path(requested_path).resolve()
         
-        # Check if path is within C:/dev
+        # Check if path is within allowed base path
         if not abs_path.is_relative_to(ALLOWED_BASE_PATH):
             raise HTTPException(
                 status_code=403,
