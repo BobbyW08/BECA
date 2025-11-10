@@ -62,12 +62,16 @@ export class BECAApiService {
      */
     async sendMessage(message: string, mode: 'plan' | 'act' = 'act'): Promise<BECAResponse> {
         try {
-            const response = await this.apiClient.post('/chat', {
+            const response = await this.apiClient.post('/api/chat', {
                 message,
                 mode,
-                stream: false
+                history: []
             });
-            return response.data;
+            return {
+                response: response.data.response,
+                files_modified: response.data.files_changed || [],
+                error: undefined
+            };
         } catch (error: any) {
             console.error('Error sending message to BECA:', error);
             return {
@@ -82,8 +86,12 @@ export class BECAApiService {
      */
     async getStatus(): Promise<BECAStatus> {
         try {
-            const response = await this.apiClient.get('/status');
-            return response.data;
+            const response = await this.apiClient.get('/api/status');
+            return {
+                status: response.data.agent_available ? 'online' : 'offline',
+                model: 'ollama',
+                mode: 'ready'
+            };
         } catch (error: any) {
             console.error('Error getting BECA status:', error);
             return {
@@ -94,42 +102,30 @@ export class BECAApiService {
     }
 
     /**
-     * Get chat history
+     * Get chat history - stored locally in browser
      */
     async getChatHistory(): Promise<BECAMessage[]> {
-        try {
-            const response = await this.apiClient.get('/chat/history');
-            return Array.isArray(response.data?.history) ? response.data.history : [];
-        } catch (error: any) {
-            console.error('Error getting chat history:', error);
-            return [];
-        }
+        // Chat history is now managed client-side
+        return [];
     }
 
     /**
-     * Clear chat history
+     * Clear chat history - managed locally in browser
      */
     async clearHistory(): Promise<void> {
-        try {
-            await this.apiClient.post('/chat/clear');
-        } catch (error: any) {
-            console.error('Error clearing chat history:', error);
-        }
+        // Chat history clearing is now managed client-side
     }
 
     /**
-     * List files in a directory
+     * Get file tree
      */
-    async listFiles(path: string, recursive: boolean = false): Promise<string[]> {
+    async getFileTree(): Promise<any> {
         try {
-            const response = await this.apiClient.post('/files/list', {
-                path,
-                recursive
-            });
-            return Array.isArray(response.data?.files) ? response.data.files : [];
+            const response = await this.apiClient.get('/api/files/tree');
+            return response.data;
         } catch (error: any) {
-            console.error('Error listing files:', error);
-            return [];
+            console.error('Error getting file tree:', error);
+            return null;
         }
     }
 
@@ -138,22 +134,10 @@ export class BECAApiService {
      */
     async readFile(path: string): Promise<string> {
         try {
-            const response = await this.apiClient.post('/files/read', { path });
+            const response = await this.apiClient.post('/api/files/read', { path });
             return response.data.content || '';
         } catch (error: any) {
             console.error('Error reading file:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Write file contents
-     */
-    async writeFile(path: string, content: string): Promise<void> {
-        try {
-            await this.apiClient.post('/files/write', { path, content });
-        } catch (error: any) {
-            console.error('Error writing file:', error);
             throw error;
         }
     }

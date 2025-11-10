@@ -6,6 +6,7 @@
     height: 100%;
     background: var(--theia-editor-background);
     color: var(--theia-editor-foreground);
+    border-left: 1px solid var(--theia-panel-border);
 }
 
 .beca-chat-header {
