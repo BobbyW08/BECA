@@ -17,13 +17,13 @@ services:
       - beca-memory:/app/data
       - beca-workspace:/app/workspace
     environment:
-      - OLLAMA_URL=http://ollama-gpu:11434
+      - OLLAMA_URL=http://host.docker.internal:11434
       - PYTHONUNBUFFERED=1
       - API_PORT=8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - beca-network
-    depends_on:
-      - ollama-gpu
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -60,33 +60,10 @@ services:
 
   # ============================================
   # Ollama with GPU - LLM inference engine
+  # NOTE: Using native Ollama on host machine (not Docker container)
+  # The beca-backend connects to host.docker.internal:11434
   # ============================================
-  ollama-gpu:
-    image: ollama/ollama:latest
-    container_name: ollama-gpu
-    hostname: ollama-gpu
-    restart: unless-stopped
-    ports:
-      - "11434:11434"  # Ollama API
-    volumes:
-      - ollama-models:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-    networks:
-      - beca-network
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+  # ollama-gpu service removed - using native Ollama on VM host
 
   # ============================================
   # MCP Server - Claude integration
@@ -198,10 +175,6 @@ volumes:
   beca-memory:
     driver: local
   beca-workspace:
-    driver: local
-  
-  # Ollama models (large, ~10GB+)
-  ollama-models:
     driver: local
   
   # Portainer data
