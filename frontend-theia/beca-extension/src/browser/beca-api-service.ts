@@ -31,9 +31,9 @@ export class BECAApiService {
         const protocol = window.location.protocol; // http: or https:
         const hostname = window.location.hostname; // e.g., 34.134.149.22 or localhost
         
-        // If BECA_API_URL is explicitly set in environment, use it
-        // Otherwise, use the same host as frontend but port 8000
-        this.apiUrl = process.env.BECA_API_URL || `${protocol}//${hostname}:8000`;
+        // Use the same host as frontend but port 8000
+        // Note: process.env is not available in browser context
+        this.apiUrl = `${protocol}//${hostname}:8000`;
         
         console.log(`BECA API URL: ${this.apiUrl}`);
         
@@ -99,7 +99,7 @@ export class BECAApiService {
     async getChatHistory(): Promise<BECAMessage[]> {
         try {
             const response = await this.apiClient.get('/chat/history');
-            return response.data.history || [];
+            return Array.isArray(response.data?.history) ? response.data.history : [];
         } catch (error: any) {
             console.error('Error getting chat history:', error);
             return [];
@@ -126,7 +126,7 @@ export class BECAApiService {
                 path,
                 recursive
             });
-            return response.data.files || [];
+            return Array.isArray(response.data?.files) ? response.data.files : [];
         } catch (error: any) {
             console.error('Error listing files:', error);
             return [];

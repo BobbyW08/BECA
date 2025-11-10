@@ -42,9 +42,15 @@ export class BECAChatWidget extends ReactWidget {
     }
 
     protected async loadChatHistory(): Promise<void> {
-        const history = await this.becaApi.getChatHistory();
-        this.messages = history;
-        this.update();
+        try {
+            const history = await this.becaApi.getChatHistory();
+            this.messages = Array.isArray(history) ? history : [];
+            this.update();
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+            this.messages = [];
+            this.update();
+        }
     }
 
     protected render(): React.ReactNode {
@@ -181,7 +187,7 @@ export class BECAChatWidget extends ReactWidget {
             });
 
             // Handle file tracking if enabled and files were modified
-            if (this.followMode && response.files_modified && response.files_modified.length > 0) {
+            if (this.followMode && Array.isArray(response.files_modified) && response.files_modified.length > 0) {
                 await this.openModifiedFiles(response.files_modified);
             }
 
@@ -203,12 +209,18 @@ export class BECAChatWidget extends ReactWidget {
     }
 
     private async openModifiedFiles(files: string[]): Promise<void> {
+        if (!Array.isArray(files) || files.length === 0) {
+            return;
+        }
+        
         for (const file of files) {
             try {
-                const uri = new URI(file);
-                await this.editorManager.open(uri, {
-                    mode: 'reveal'
-                });
+                if (file && typeof file === 'string') {
+                    const uri = new URI(file);
+                    await this.editorManager.open(uri, {
+                        mode: 'reveal'
+                    });
+                }
             } catch (error: any) {
                 console.error(`Failed to open file ${file}:`, error);
             }
