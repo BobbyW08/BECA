@@ -5,7 +5,7 @@ services:
   # BECA Backend - FastAPI application with Plan/Act modes
   # ============================================
   beca-backend:
-    image: gcr.io/beca-0001/beca-backend:latest
+    image: beca-backend:latest
     container_name: beca-backend
     hostname: beca-backend
     restart: unless-stopped
@@ -35,7 +35,7 @@ services:
   # BECA Frontend - Eclipse Theia IDE with BECA extension
   # ============================================
   beca-frontend:
-    image: gcr.io/beca-0001/beca-frontend:latest
+    image: beca-frontend:latest
     container_name: beca-frontend
     hostname: beca-frontend
     restart: unless-stopped
@@ -69,7 +69,7 @@ services:
   # MCP Server - Claude integration
   # ============================================
   mcp-server:
-    image: gcr.io/beca-0001/beca-mcp:latest
+    image: beca-mcp:latest
     container_name: mcp-server
     hostname: mcp-server
     restart: unless-stopped
